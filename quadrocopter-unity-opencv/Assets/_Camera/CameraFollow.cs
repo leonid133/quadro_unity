@@ -54,7 +54,7 @@ public class CameraFollow : MonoBehaviour {
             transform.rotation = Quaternion.Euler(transform.rotation.x, transform.rotation.y, 0);
             transform.rotation = Quaternion.LookRotation(target.position - transform.position);
 
-            //Ypos = transform.position.y;
+           // Ypos = transform.position.y;
 
             x = 0;
             y = 0;
