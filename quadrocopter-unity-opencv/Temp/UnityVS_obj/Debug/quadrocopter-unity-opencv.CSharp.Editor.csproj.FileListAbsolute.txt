@@ -1,0 +1,1 @@
+C:\Programm\quadro_unity\quadrocopter-unity-opencv\Temp\UnityVS_obj\Debug\quadrocopter-unity-opencv.CSharp.Editor.csprojResolveAssemblyReference.cache

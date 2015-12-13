@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+C:\Programm\quadro_unity\quadrocopter-unity-opencv\Temp\UnityVS_obj\Debug\quadrocopter-unity-opencv.CSharp.csprojResolveAssemblyReference.cache
+>>>>>>> 963a07c734b56bebe571a0c60079cca26468c7e5
 C:\Programm\quadro_unity\quadrocopter-unity-opencv\Temp\UnityVS_bin\Debug\Assembly-CSharp.dll
 C:\Programm\quadro_unity\quadrocopter-unity-opencv\Temp\UnityVS_bin\Debug\Assembly-CSharp.pdb
 C:\Programm\quadro_unity\quadrocopter-unity-opencv\Temp\UnityVS_bin\Debug\Mono.Cecil.dll
@@ -13,6 +17,9 @@ C:\Programm\quadro_unity\quadrocopter-unity-opencv\Temp\UnityVS_bin\Debug\UnityE
 C:\Programm\quadro_unity\quadrocopter-unity-opencv\Temp\UnityVS_bin\Debug\UnityEditor.xml
 C:\Programm\quadro_unity\quadrocopter-unity-opencv\Temp\UnityVS_bin\Debug\Mono.Cecil.xml
 C:\Programm\quadro_unity\quadrocopter-unity-opencv\Temp\UnityVS_bin\Debug\UnityEditor.iOS.Extensions.Xcode.xml
+<<<<<<< HEAD
 C:\Programm\quadro_unity\quadrocopter-unity-opencv\Temp\UnityVS_obj\Debug\quadrocopter-unity-opencv.CSharp.csprojResolveAssemblyReference.cache
+=======
+>>>>>>> 963a07c734b56bebe571a0c60079cca26468c7e5
 C:\Programm\quadro_unity\quadrocopter-unity-opencv\Temp\UnityVS_obj\Debug\Assembly-CSharp.dll
 C:\Programm\quadro_unity\quadrocopter-unity-opencv\Temp\UnityVS_obj\Debug\Assembly-CSharp.pdb

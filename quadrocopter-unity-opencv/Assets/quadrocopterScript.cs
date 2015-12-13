@@ -19,6 +19,7 @@ public class quadrocopterScript : MonoBehaviour {
     public double targetX;
     public double targetZ;
 
+<<<<<<< HEAD
     //PID регуляторы которые будут стабилизировать высоту и координаты
 
     /*
@@ -33,6 +34,13 @@ public class quadrocopterScript : MonoBehaviour {
 
     public double ErrAccel;
     public double ErrGPS;
+=======
+    private PID H_PID = new PID(150, 2, 100);
+    private PID X_PID = new PID(20, 1, 15);
+    private PID Z_PID = new PID(20, 1, 15);
+   
+    public double ErrK;
+>>>>>>> 963a07c734b56bebe571a0c60079cca26468c7e5
 
     //фактические параметры
     private double pitch; //Тангаж
@@ -46,6 +54,7 @@ public class quadrocopterScript : MonoBehaviour {
 	public double targetYaw;
 
     //PID регуляторы, которые будут стабилизировать углы
+<<<<<<< HEAD
     /*
     private PID pitchPID = new PID (100, 0, 20); //держится на ошибке 7 м/с2 но очень беспокойно себя ведет
     private PID rollPID = new PID (100, 0, 20);
@@ -61,6 +70,16 @@ public class quadrocopterScript : MonoBehaviour {
     private PID pitchPID = new PID(10, 0, 2); 
     private PID rollPID = new PID(10, 0, 2);
 
+=======
+    //каждому углу свой регулятор, класс PID определен ниже
+
+    //private PID pitchPID = new PID (100, 0, 20);
+    //private PID rollPID = new PID (100, 0, 20);
+
+    private PID pitchPID = new PID(20, 5, 15);
+    private PID rollPID = new PID(20, 5, 15);
+ 
+>>>>>>> 963a07c734b56bebe571a0c60079cca26468c7e5
     private PID yawPID = new PID (50, 0, 50);
 
 	private Quaternion prevRotation = new Quaternion (0, 1, 0, 0);
@@ -184,12 +203,17 @@ public class quadrocopterScript : MonoBehaviour {
 
         if (samples < 3)
         {
+<<<<<<< HEAD
+=======
+
+>>>>>>> 963a07c734b56bebe571a0c60079cca26468c7e5
             samples = 3;
         }
 
         //Initialize
         if (positionRegister == null)
         {
+<<<<<<< HEAD
             positionRegister = new Vector3[samples];
             posTimeRegister = new float[samples];
         }
@@ -391,6 +415,197 @@ public class quadrocopterScript : MonoBehaviour {
         target = (Quaternion.Euler(target.x, 0, target.z)* Quaternion.Euler(0, rot.y, 0)).eulerAngles;
 
         //применяем расчитанные допустимые целевые значения крена и тангажа
+=======
+
+            positionRegister = new Vector3[samples];
+            posTimeRegister = new float[samples];
+        }
+
+        
+        for (int i = 0; i < positionRegister.Length - 1; i++)
+        {
+
+            positionRegister[i] = positionRegister[i + 1];
+            posTimeRegister[i] = posTimeRegister[i + 1];
+        }
+        positionRegister[positionRegister.Length - 1] = position;
+        posTimeRegister[posTimeRegister.Length - 1] = Time.time;
+
+        positionSamplesTaken++;
+
+       
+        if (positionSamplesTaken >= samples)
+        {
+
+            
+            for (int i = 0; i < positionRegister.Length - 2; i++)
+            {
+
+                deltaDistance = positionRegister[i + 1] - positionRegister[i];
+                deltaTime = posTimeRegister[i + 1] - posTimeRegister[i];
+
+               
+                if (deltaTime == 0)
+                {
+
+                    return false;
+                }
+
+                speedA = deltaDistance / deltaTime;
+                deltaDistance = positionRegister[i + 2] - positionRegister[i + 1];
+                deltaTime = posTimeRegister[i + 2] - posTimeRegister[i + 1];
+
+                if (deltaTime == 0)
+                {
+
+                    return false;
+                }
+
+                speedB = deltaDistance / deltaTime;
+
+               
+                averageSpeedChange += speedB - speedA;
+            }
+
+          
+            averageSpeedChange /= positionRegister.Length - 2;
+
+            float deltaTimeTotal = posTimeRegister[posTimeRegister.Length - 1] - posTimeRegister[0];
+
+          
+            vector = averageSpeedChange / deltaTimeTotal;
+
+            return true;
+        }
+
+        else {
+
+            return false;
+        }
+    }
+    
+    private Vector3 lastVelocity;
+    //получаем показания акселерометров
+    public Vector3 GetSensors()
+    {
+        Vector3 rot = GameObject.Find("Sensors").GetComponent<Transform>().rotation.eulerAngles;
+        Vector3 pos = GameObject.Find("Sensors").GetComponent<Transform>().position;
+
+        //поворачиваем гравитацию на угол поворота сенсора, 
+        //чтобы получить значения сходные с реальными показаниями акселей
+        Vector3 grav = Physics.gravity;
+        Vector3 newgrav = Vector3.down;
+
+        newgrav.x = (float)(grav.x * Math.Cos(-Math.PI * rot.y / 180.0f) + grav.z * Math.Sin(-Math.PI * rot.y / 180.0f));
+        newgrav.y = grav.y;
+        newgrav.z = -(float)(grav.x * Math.Sin(-Math.PI * rot.y / 180.0f) + grav.z * Math.Cos(-Math.PI * rot.y / 180.0f));
+        grav = newgrav;
+
+        newgrav.x = grav.x;
+        newgrav.y = (float)(grav.y * Math.Cos(Math.PI * rot.x / 180.0f) - grav.z * Math.Sin(Math.PI * rot.x / 180.0f));
+        newgrav.z = (float)(grav.y * Math.Sin(Math.PI * rot.x / 180.0f) + grav.z * Math.Cos(Math.PI * rot.x / 180.0f));
+        grav = newgrav;
+
+        newgrav.x = (float)(grav.x * Math.Cos(Math.PI * rot.z / 180.0f) - grav.y * Math.Sin(Math.PI * rot.z / 180.0f));
+        newgrav.y = (float)(grav.x * Math.Sin(Math.PI * rot.z / 180.0f) + grav.y * Math.Cos(Math.PI * rot.z / 180.0f));
+        newgrav.z = grav.z;
+        grav = newgrav;
+
+        //измеряем ускорение через изменение скорости
+        Vector3 acceleration;
+        LinearAcceleration(out acceleration, pos, 6);
+        lastVelocity = GameObject.Find("Frame").GetComponent<Rigidbody>().velocity;
+        acceleration += grav; //добавляем ускорение свободного падения
+
+        // добавляем ошибку
+        System.Random x_rnd = new System.Random();
+        double x_err = Convert.ToDouble(x_rnd.Next(-1000, 1000)) * 0.001f * ErrK;
+        acceleration.x += (float)x_err;
+
+        System.Random y_rnd = new System.Random();
+        double y_err = Convert.ToDouble(y_rnd.Next(-1000, 1000)) * 0.001f * ErrK;
+        acceleration.y += (float)y_err;
+
+        System.Random z_rnd = new System.Random();
+        double z_err = Convert.ToDouble(z_rnd.Next(-1000, 1000)) * 0.001f * ErrK;
+        acceleration.z += (float)z_err;
+
+        return acceleration;
+    }
+    
+    void readRotation () {
+
+        //фактическая ориентация квадрокоптера,
+        //в реальном квадрокоптере эти данные необходимо получать
+        //из акселерометра-гироскопа-магнетометра
+
+        Vector3 rot = GameObject.Find ("Sensors").GetComponent<Transform> ().rotation.eulerAngles;
+        Vector3 pos = GameObject.Find("Sensors").GetComponent<Transform> ().position;
+
+        Vector3 acceleration = GetSensors();
+
+        //выводим показания акселерометров
+        Ax = acceleration.x;
+        Ay = acceleration.y;
+        Az = acceleration.z;
+
+        //получаем углы на которые акселерометры по трем осям повернуты относительно земли
+        Vector3 accel_rot = Vector3.zero;
+        accel_rot.x = (float)(360.0f / 2 * Math.PI) * (float)Math.Atan(Ax / Math.Sqrt(Math.Pow(Ay, 2) + Math.Pow(Az, 2)));
+        accel_rot.y = (float)(360.0f / 2 * Math.PI) * (float)Math.Atan(Ay / Math.Sqrt(Math.Pow(Ax, 2) + Math.Pow(Az, 2)));
+        accel_rot.z = (float)(360.0f / 2 * Math.PI) * (float)Math.Atan(Az / Math.Sqrt(Math.Pow(Ax, 2) + Math.Pow(Ay, 2)));
+
+        //поворачиваем вектор направленный в землю, на угол акселерометров, чтобы получить углы объекта относительно земли
+        accel_rot = Quaternion.FromToRotation(Vector3.down, accel_rot).eulerAngles;
+
+        //отображаем полученное с помощью акселерометров положение 
+        GameObject.Find("Cube_girotest").GetComponent<Transform>().rotation = Quaternion.FromToRotation(GameObject.Find("Cube_girotest").GetComponent<Transform>().rotation.eulerAngles, Vector3.zero);
+        GameObject.Find("Cube_girotest").GetComponent<Transform>().Rotate(accel_rot);
+
+        Vector3 girotest_pos;
+        girotest_pos.x = pos.x;
+        girotest_pos.y = pos.y + 0.5f;
+        girotest_pos.z = pos.z;
+        GameObject.Find("Cube_girotest").GetComponent<Transform>().position = girotest_pos;
+
+        //Получаем целевые параметры для автопилота
+        Vector3 target;
+        H_ = pos.y;
+        geo_X = pos.x;
+        geo_Z = pos.z;
+
+        //Вычисляем необходимые параметры крена, тангажа и газа, зля достижения заданных координат
+        double dthr = H_PID.calc(pos.y, targetH);
+        dthr = dthr < 0 ? 0 : dthr;
+        double thrLimit = dthr > 100 ? 100 : dthr;
+        throttle = thrLimit; 
+
+        target.y = 0;
+        double LimitAngle = 60;
+        double dRoll = X_PID.calc(pos.x, targetX);
+        dRoll = dRoll < -LimitAngle ? -LimitAngle : dRoll;
+        dRoll = dRoll > LimitAngle ? LimitAngle : dRoll;
+        //targetRoll = -dRoll;
+        target.x = (float)dRoll;
+
+        double dPitch = Z_PID.calc(pos.z, targetZ);
+        dPitch = dPitch < -LimitAngle ? -LimitAngle : dPitch;
+        dPitch = dPitch > LimitAngle ? LimitAngle : dPitch;
+        // targetPitch = dPitch;
+        target.z = (float)dPitch;
+
+        //поворачиваем расчетные значения на отклонение от севера
+        target = (Quaternion.Euler(target.x, 0, target.z)* Quaternion.Euler(0, rot.y, 0)).eulerAngles;
+
+        //применяем расчитанные допустимые целевые значения крена и тангажа
+        targetPitch = target.z;
+        targetRoll = -target.x;
+        
+        //углы расчитанные из акселерометров
+        pitch = accel_rot.x;
+        yaw = rot.y; //rot.y =accel_down.y;  направление севера нужно определять по компасу, аксели тут не помогут
+        roll = accel_rot.z;
+>>>>>>> 963a07c734b56bebe571a0c60079cca26468c7e5
 
         targetPitch = target.z;
         targetRoll = -target.x;
