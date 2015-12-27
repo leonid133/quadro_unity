@@ -2,11 +2,241 @@
 using UnityEngine.UI;
 using System.Collections;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
+public class Web_perceptron
+{
+    private int[] m_mul; // Тут будем хранить отмасштабированные сигналы
+    private int[] m_weight; // Массив для хранения весов
+    private int[] m_input; // Входная информация
+    private int m_limit = 50; // Порог - выбран экспериментально, для быстрого обучения
+    private double alpha = 2; // sigmoid's alpha value
+    private int m_sum; // Тут сохраним сумму масштабированных сигналов
+    private int m_size;
+
+    public Web_perceptron(int size) // Задаем свойства при создании объекта
+    {
+        this.m_size = size;
+
+        this.m_weight = new int[this.m_size]; // Определяемся с размером массива (число входов)
+        this.m_mul = new int[this.m_size];
+        this.m_input = new int[this.m_size];
+    }
+    public void mul_w(ref int[] inP)
+    {
+
+        for (int x = 0; x < m_size; x++) // Пробегаем по каждому дендриду
+        {
+            this.m_input[x] = inP[x]; // Получаем входные данные
+            this.m_mul[x] = this.m_input[x] * this.m_weight[x]; // Умножаем его сигнал (0 или 1) на его собственный вес и сохраняем в массив.
+        }
+    }
+    public void Sum()
+    {
+        this.m_sum = 0;
+        for (int x = 0; x < this.m_size; x++)
+        {
+            this.m_sum += this.m_mul[x];
+        }
+    }
+    public bool RezThreshold(ref int[] inP) //пороговая
+    {
+        this.mul_w(ref inP);
+        Sum();
+        if (this.m_sum >= this.m_limit)
+            return true;
+        else return false;
+    }
+    public double Rez_th() //гиперболический тангенс
+    {
+        double result = 0.0;
+        return result;
+    }
+    public double RezBipolarSigmoid(ref int[] inP) //Биполярный сигмоид
+    {
+        this.mul_w(ref inP);
+        Sum();
+        double result = 0.0;
+        double y = ((2 / (1 + Math.Exp(-alpha * this.m_sum))) - 1);
+        //result = (alpha * (1 - y * y) / 2);
+        result = y;
+        return result;
+    }
+    public void incW()
+    {
+        for (int x = 0; x < this.m_size; x++)
+        {
+            this.m_weight[x] += this.m_input[x];
+        }
+    }
+    public void decW()
+    {
+        for (int x = 0; x < this.m_size; x++)
+        {
+            this.m_weight[x] -= this.m_input[x];
+        }
+    }
+
+}
+
+public class Neyro_Layer
+{
+    private Web_perceptron[] m_layer;
+    private Web_perceptron[] m_layer2;
+    private int m_size;
+    private int[] m_inP;
+    private int[] m_inP2;
+
+    public Neyro_Layer(int size)
+    {
+        this.m_size = size;
+
+        this.m_inP = new int[this.m_size];
+        for (int i = 0; i < this.m_size; ++i)
+        {
+            this.m_inP[i] = 0;
+        }
+
+        this.m_inP2 = new int[this.m_size];
+        for (int i = 0; i < this.m_size; ++i)
+        {
+            this.m_inP2[i] = 0;
+        }
+
+        m_layer = new Web_perceptron[m_size];
+        for (int i=0; i < m_size; i++)
+        {
+            m_layer[i] = new Web_perceptron(m_size);
+        }
+        m_layer2 = new Web_perceptron[m_size];
+        for (int i = 0; i < m_size; i++)
+        {
+            m_layer2[i] = new Web_perceptron(m_size);
+        }
+    }
+
+    public int GetResult(int inP)
+    {
+        for (int i = 0; i < this.m_size; ++i)
+        {
+            if (inP > i)
+                this.m_inP[i] = 1;
+            else
+                this.m_inP[i] = 0;
+        }
+
+        int result = 0;
+        for (int i = 0; i < this.m_size; ++i)
+        {
+            if ( m_layer[i].RezThreshold(ref this.m_inP) )
+                result++;
+        }
+        return result;
+    }
+    public double GetResultBPS(int inP)
+    {
+        for (int i = 0; i < this.m_size; ++i)
+        {
+            if (inP > i)
+                this.m_inP[i] = 1;
+            else
+                this.m_inP[i] = 0;
+        }
+
+        double result = 0;
+        for (int i = 0; i < this.m_size; ++i)
+        {
+            if (this.m_layer[i].RezThreshold(ref this.m_inP))
+            { 
+                result +=1.0;
+                this.m_inP2[i] = 1;
+            }
+            else
+            {
+                this.m_inP2[i] = 0;
+            }
+        }
+        for (int i = 0; i < this.m_size; ++i)
+        {
+            result += m_layer2[i].RezBipolarSigmoid(ref this.m_inP2);
+        }
+        return result;
+    }
+
+    public void Learning(int inP, int Answer)
+    {
+        //int Sum_Net = 0;
+        for (int i = 0; i < m_size; ++i)
+        {
+            if (inP > i)
+                this.m_inP[i] = 1;
+            else
+                this.m_inP[i] = 0;
+        }
+        for (int i = 0; i < this.m_size; ++i)
+        {
+            //if(this.m_layer[i].RezThreshold(ref this.m_inP))
+               // Sum_Net+= this.m_layer[i].RezBipolarSigmoid(ref this.m_inP);
+            
+            if (!this.m_layer[i].RezThreshold(ref this.m_inP) && i < Answer)
+                this.m_layer[i].incW();
+            if (this.m_layer[i].RezThreshold(ref this.m_inP) && i > Answer)
+                this.m_layer[i].decW();
+        }
+        /*
+        for (int i = 0; i < this.m_size; ++i)
+        {
+            //if(this.m_layer[i].RezThreshold(ref this.m_inP))
+            // Sum_Net+= this.m_layer[i].RezBipolarSigmoid(ref this.m_inP);
+
+            if (!this.m_layer2[i].RezThreshold(ref this.m_inP) && i < Answer)
+                this.m_layer2[i].incW();
+            if (this.m_layer2[i].RezThreshold(ref this.m_inP) && i > Answer)
+                this.m_layer2[i].decW();
+        }
+
+        for (int i = 0; i < this.m_size; ++i)
+        {
+            if (this.m_layer[i].RezThreshold(ref this.m_inP))
+            {
+                this.m_inP2[i] = 1;
+            }
+            else
+            {
+                this.m_inP2[i] = 0;
+            }
+        }
+        */
+
+        //if (Sum_Net < (double)Answer)
+        //{
+        //    for (int i = 0; i < this.m_size; ++i)
+        //    {
+        //        if (this.m_inP2[i]==1)
+        //            this.m_layer2[i].incW();
+        //    }
+        //}
+        //if (Sum_Net > (double)Answer)
+        //{
+        //    for (int i = 0; i < this.m_size; ++i)
+        //    {
+        //        if (this.m_inP2[i]!=1)
+        //            this.m_layer2[i].decW();
+        //    }
+        //}
+
+    }
+}
 
 public class quadrocopterScript : MonoBehaviour {
+    //нейронная сеть регулировки высоты
+    private static Neyro_Layer H_neyro = new Neyro_Layer(300);
+    public bool H_neyro_on = false;
+    public double thrLimit;
+
     //axel autopulot
-    
+
     public double H_;
     public double geo_X;
     public double geo_Z;
@@ -20,17 +250,24 @@ public class quadrocopterScript : MonoBehaviour {
     public double targetZ;
 
     //PID регуляторы которые будут стабилизировать высоту и координаты
+    //private PID H_PID = new PID(80, 2, 50);
+    //private PID H_PID = new PID(40, 2, 50);
+    private PID H_PID = new PID(20, 0.01, 30);
+
+    // private PID X_PID = new PID(1, 0.000005, 30);
+    // private PID Z_PID = new PID(1, 0.000005, 30);
 
     /*
-    private PID H_PID = new PID(80, 2, 50);
-    private PID X_PID = new PID(1, 0.000005, 0.003);
-    private PID Z_PID = new PID(1, 0.000005, 0.003);
-   */
+     private PID X_PID = new PID(2, 0.000005, 5);
+     private PID Z_PID = new PID(2, 0.000005, 5);
+     */
+    /*
+    private PID X_PID = new PID(1, 0.001, 2);
+    private PID Z_PID = new PID(1, 0.001, 2);*/
 
-    private PID H_PID = new PID(80, 2, 50);
-    private PID X_PID = new PID(2, 0.000005, 5);
-    private PID Z_PID = new PID(2, 0.000005, 5);
-
+    private PID X_PID = new PID(0.8, 0.0000128, 4);
+    private PID Z_PID = new PID(0.8, 0.0000128, 4);
+    
     public double ErrAccel;
     public double ErrGPS;
 
@@ -46,10 +283,10 @@ public class quadrocopterScript : MonoBehaviour {
 	public double targetYaw;
 
     //PID регуляторы, которые будут стабилизировать углы
-    /*
+
     private PID pitchPID = new PID (100, 0, 20); //держится на ошибке 7 м/с2 но очень беспокойно себя ведет
     private PID rollPID = new PID (100, 0, 20);
-    */
+
     /*
     private PID pitchPID = new PID(20, 1, 15); //держится на ошибке 4 м/с2
     private PID rollPID = new PID(20, 1, 15);
@@ -58,12 +295,15 @@ public class quadrocopterScript : MonoBehaviour {
        private PID pitchPID = new PID(10, 1, 1); //плавно держится на 7 но медленно реагирует на события, может перевернуться 
        private PID rollPID = new PID(10, 1, 1);
       */
-    private PID pitchPID = new PID(10, 0, 2); // 5 м/с2 держится плавно реагирует на ошибки
-    private PID rollPID = new PID(10, 0, 2);
+    //private PID pitchPID = new PID(10, 0, 2); // 5 м/с2 держится плавно реагирует на ошибки
+    //private PID rollPID = new PID(10, 0, 2);
+
+    //private PID pitchPID = new PID(20, 0.001, 50); 
+    //private PID rollPID = new PID(20, 0.001, 50);
 
     private PID yawPID = new PID (50, 0, 50);
 
-	private Quaternion prevRotation = new Quaternion (0, 1, 0, 0);
+	//private Quaternion prevRotation = new Quaternion (0, 1, 0, 0);
 
     //mouse contol
     float x = 0.0f;
@@ -102,10 +342,11 @@ public class quadrocopterScript : MonoBehaviour {
                 targetYaw = rnd_;
 
                 rnd = new System.Random();
-                rnd_ = 5 + Convert.ToDouble(rnd.Next(0, 1000)) * 0.001f * 15;
+                rnd_ = 15 + Convert.ToDouble(rnd.Next(0, 1000)) * 0.001f * 10;
                 targetH = rnd_;
             }
         }
+        /*
         throttle += Input.GetAxis("Vertical")* throttleSpeed;
         targetYaw += Input.GetAxis("Horizontal")* YawSpeed;
         if (Input.GetMouseButton(0))
@@ -125,6 +366,7 @@ public class quadrocopterScript : MonoBehaviour {
         { targetPitch += 1; }
         if (Input.GetKey("c"))
         { targetPitch -= 1; }
+        */
         if (Input.GetKey("left ctrl"))
         {
             //throttle = 0;
@@ -242,51 +484,64 @@ public class quadrocopterScript : MonoBehaviour {
 
   
     private Vector3 lastVelocity;
+    private float sensor_timer;
+    private Vector3 acceleration_save;
     //получаем показания акселерометров
     public Vector3 GetSensors()
     {
-        Vector3 rot = GameObject.Find("Sensors").GetComponent<Transform>().rotation.eulerAngles;
-        Vector3 pos = GameObject.Find("Sensors").GetComponent<Transform>().position;
-
-        //поворачиваем гравитацию на угол поворота сенсора, 
-        //чтобы получить значения сходные с реальными показаниями акселей
-        Vector3 grav = Physics.gravity;
-        Vector3 newgrav = Vector3.down;
-
-        newgrav.x = (float)(grav.x * Math.Cos(-Math.PI * rot.y / 180.0f) + grav.z * Math.Sin(-Math.PI * rot.y / 180.0f));
-        newgrav.y = grav.y;
-        newgrav.z = -(float)(grav.x * Math.Sin(-Math.PI * rot.y / 180.0f) + grav.z * Math.Cos(-Math.PI * rot.y / 180.0f));
-        grav = newgrav;
-
-        newgrav.x = grav.x;
-        newgrav.y = (float)(grav.y * Math.Cos(Math.PI * rot.x / 180.0f) - grav.z * Math.Sin(Math.PI * rot.x / 180.0f));
-        newgrav.z = (float)(grav.y * Math.Sin(Math.PI * rot.x / 180.0f) + grav.z * Math.Cos(Math.PI * rot.x / 180.0f));
-        grav = newgrav;
-
-        newgrav.x = (float)(grav.x * Math.Cos(Math.PI * rot.z / 180.0f) - grav.y * Math.Sin(Math.PI * rot.z / 180.0f));
-        newgrav.y = (float)(grav.x * Math.Sin(Math.PI * rot.z / 180.0f) + grav.y * Math.Cos(Math.PI * rot.z / 180.0f));
-        newgrav.z = grav.z;
-        grav = newgrav;
-
-        //измеряем ускорение через изменение скорости
+        sensor_timer += Time.deltaTime;
         Vector3 acceleration;
-        LinearAcceleration(out acceleration, pos, 6);
-        lastVelocity = GameObject.Find("Frame").GetComponent<Rigidbody>().velocity;
-        acceleration += grav; //добавляем ускорение свободного падения
+        if (sensor_timer > 0.005) //200Гц
+        {
+            Vector3 rot = GameObject.Find("Sensors").GetComponent<Transform>().rotation.eulerAngles;
+            Vector3 pos = GameObject.Find("Sensors").GetComponent<Transform>().position;
 
-        // добавляем ошибку
-        System.Random x_rnd = new System.Random();
-        double x_err = Convert.ToDouble(x_rnd.Next(-1000, 1000)) * 0.001f * ErrAccel;
-        acceleration.x += (float)x_err;
+            //поворачиваем гравитацию на угол поворота сенсора, 
+            //чтобы получить значения сходные с реальными показаниями акселей
+            Vector3 grav = Physics.gravity;
+            Vector3 newgrav = Vector3.down;
 
-        System.Random y_rnd = new System.Random();
-        double y_err = Convert.ToDouble(y_rnd.Next(-1000, 1000)) * 0.001f * ErrAccel;
-        acceleration.y += (float)y_err;
+            newgrav.x = (float)(grav.x * Math.Cos(-Math.PI * rot.y / 180.0f) + grav.z * Math.Sin(-Math.PI * rot.y / 180.0f));
+            newgrav.y = grav.y;
+            newgrav.z = -(float)(grav.x * Math.Sin(-Math.PI * rot.y / 180.0f) + grav.z * Math.Cos(-Math.PI * rot.y / 180.0f));
+            grav = newgrav;
 
-        System.Random z_rnd = new System.Random();
-        double z_err = Convert.ToDouble(z_rnd.Next(-1000, 1000)) * 0.001f * ErrAccel;
-        acceleration.z += (float)z_err;
+            newgrav.x = grav.x;
+            newgrav.y = (float)(grav.y * Math.Cos(Math.PI * rot.x / 180.0f) - grav.z * Math.Sin(Math.PI * rot.x / 180.0f));
+            newgrav.z = (float)(grav.y * Math.Sin(Math.PI * rot.x / 180.0f) + grav.z * Math.Cos(Math.PI * rot.x / 180.0f));
+            grav = newgrav;
 
+            newgrav.x = (float)(grav.x * Math.Cos(Math.PI * rot.z / 180.0f) - grav.y * Math.Sin(Math.PI * rot.z / 180.0f));
+            newgrav.y = (float)(grav.x * Math.Sin(Math.PI * rot.z / 180.0f) + grav.y * Math.Cos(Math.PI * rot.z / 180.0f));
+            newgrav.z = grav.z;
+            grav = newgrav;
+
+            //измеряем ускорение через изменение скорости
+            
+            LinearAcceleration(out acceleration, pos, 50);
+            lastVelocity = GameObject.Find("Frame").GetComponent<Rigidbody>().velocity;
+            acceleration += grav; //добавляем ускорение свободного падения
+
+            // добавляем ошибку
+            System.Random x_rnd = new System.Random();
+            double x_err = Convert.ToDouble(x_rnd.Next(-1000, 1000)) * 0.001f * ErrAccel;
+            acceleration.x += (float)x_err;
+
+            System.Random y_rnd = new System.Random();
+            double y_err = Convert.ToDouble(y_rnd.Next(-1000, 1000)) * 0.001f * ErrAccel;
+            acceleration.y += (float)y_err;
+
+            System.Random z_rnd = new System.Random();
+            double z_err = Convert.ToDouble(z_rnd.Next(-1000, 1000)) * 0.001f * ErrAccel;
+            acceleration.z += (float)z_err;
+
+            acceleration_save = acceleration;
+            sensor_timer = 0;
+        }
+        else
+        {
+            acceleration = acceleration_save;
+        }
         return acceleration;
     }
 
@@ -296,7 +551,7 @@ public class quadrocopterScript : MonoBehaviour {
     {
         gps_timer += Time.deltaTime;
         Vector3 pos = GameObject.Find("Sensors").GetComponent<Transform>().position;
-        if (gps_timer > 1)
+        if (gps_timer > 1) //1Гц
         {
             System.Random X_rnd = new System.Random();
             double X_err = Convert.ToDouble(X_rnd.Next(-1000, 1000)) * 0.001f * ErrGPS;
@@ -360,7 +615,9 @@ public class quadrocopterScript : MonoBehaviour {
         GetGPS(out gps_XHZ);
 
         //double geo_K = 0.002;
-        double geo_K = 0.005;
+        //double geo_K = 0.005;
+        double geo_K = 0.01;
+        //double geo_K = 0.02;
         geo_X = geo_X + (gps_XHZ.x - geo_X) * geo_K;
         geo_Z = geo_Z + (gps_XHZ.z - geo_Z) * geo_K;
         
@@ -369,8 +626,32 @@ public class quadrocopterScript : MonoBehaviour {
         //Вычисляем необходимые параметры крена, тангажа и газа, зля достижения заданных координат
         double dthr = H_PID.calc(H_, targetH);
         dthr = dthr < 0 ? 0 : dthr;
-        double thrLimit = dthr > 100 ? 100 : dthr;
-        throttle = thrLimit; 
+        thrLimit = dthr > 100 ? 100 : dthr;
+        throttle = thrLimit;
+
+        //H Neyron
+        int deltaH = (int)((targetH - H_) * 10.0);
+        deltaH += 150;
+        deltaH = deltaH < 0 ? 0 : deltaH;
+        deltaH = deltaH > 300 ? 300 : deltaH;
+
+        if (H_neyro_on)
+        {
+            dthr = (double)H_neyro.GetResult(deltaH) / 10.0;
+            //dthr = (double)H_neyro.GetResultBPS(deltaH) / 10.0;
+            dthr = dthr < 0 ? 0 : dthr;
+            thrLimit = dthr > 50 ? 50 : dthr;
+            throttle = thrLimit;
+        }
+        else
+        {
+            int answer = (int)(dthr * 10.0);
+            H_neyro.Learning(deltaH, answer);
+            dthr = (double)H_neyro.GetResult(deltaH) / 10.0;
+            //dthr = (double)H_neyro.GetResultBPS(deltaH) / 10.0;
+            dthr = dthr < 0 ? 0 : dthr;
+            thrLimit = dthr > 50 ? 50 : dthr;
+        }
 
         target.y = 0;
         double LimitAngle = 40;
@@ -389,7 +670,7 @@ public class quadrocopterScript : MonoBehaviour {
 
         //поворачиваем расчетные значения на отклонение от севера
         target = (Quaternion.Euler(target.x, 0, target.z)* Quaternion.Euler(0, rot.y, 0)).eulerAngles;
-
+       // targetYaw = (float)(360.0f / 2 * Math.PI) * (float)Math.Asin((targetX - geo_X) / Math.Sqrt(Math.Pow((targetX - geo_X), 2) + Math.Pow((targetZ - geo_Z), 2))); 
         //применяем расчитанные допустимые целевые значения крена и тангажа
 
         targetPitch = target.z;
@@ -432,21 +713,6 @@ public class quadrocopterScript : MonoBehaviour {
 
         //1 и 2 мотор впереди
         //3 и 4 моторы сзади
-        /*
-        System.Random motor1_rnd = new System.Random();
-        double motor1_err = Convert.ToDouble(motor1_rnd.Next(-1000, 1000)) * 0.0001f;
-        System.Random motor2_rnd = new System.Random();
-        double motor2_err = Convert.ToDouble(motor2_rnd.Next(-1000, 1000)) * 0.0001f;
-        System.Random motor3_rnd = new System.Random();
-        double motor3_err = Convert.ToDouble(motor3_rnd.Next(-1000, 1000)) * 0.0001f;
-        System.Random motor4_rnd = new System.Random();
-        double motor4_err = Convert.ToDouble(motor4_rnd.Next(-1000, 1000)) * 0.0001f;
-
-        double motor1power = throttle + motor1_err;
-		double motor2power = throttle + motor2_err;
-		double motor3power = throttle + motor3_err;
-		double motor4power = throttle + motor4_err;
-        */
         double motor1power = throttle;
         double motor2power = throttle;
         double motor3power = throttle;
@@ -527,7 +793,7 @@ public class quadrocopterScript : MonoBehaviour {
 
         GUI.Label(new Rect(30, 190, 2000, 30), geo_Z_string);
         GUI.Label(new Rect(30, 210, 2000, 30), targetZ_str);
-
+       
         //Выводим время
         String time_str = Time.time.ToString();
         GUI.Label(new Rect(30, 250, 2000, 30), time_str);
