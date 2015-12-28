@@ -4,234 +4,240 @@ using System.Collections;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ClassLibraryNeuralNetworks;
 
-public class Web_perceptron
+//public class Web_perceptron
+//{
+//    private int[] m_mul; // Тут будем хранить отмасштабированные сигналы
+//    private int[] m_weight; // Массив для хранения весов
+//    private int[] m_input; // Входная информация
+//    private int m_limit = 50; // Порог - выбран экспериментально, для быстрого обучения
+//    private double alpha = 2; // sigmoid's alpha value
+//    private int m_sum; // Тут сохраним сумму масштабированных сигналов
+//    private int m_size;
+
+//    public Web_perceptron(int size) // Задаем свойства при создании объекта
+//    {
+//        this.m_size = size;
+
+//        this.m_weight = new int[this.m_size]; // Определяемся с размером массива (число входов)
+//        this.m_mul = new int[this.m_size];
+//        this.m_input = new int[this.m_size];
+//    }
+//    public void mul_w(ref int[] inP)
+//    {
+
+//        for (int x = 0; x < m_size; x++) // Пробегаем по каждому дендриду
+//        {
+//            this.m_input[x] = inP[x]; // Получаем входные данные
+//            this.m_mul[x] = this.m_input[x] * this.m_weight[x]; // Умножаем его сигнал (0 или 1) на его собственный вес и сохраняем в массив.
+//        }
+//    }
+//    public void Sum()
+//    {
+//        this.m_sum = 0;
+//        for (int x = 0; x < this.m_size; x++)
+//        {
+//            this.m_sum += this.m_mul[x];
+//        }
+//    }
+//    public bool RezThreshold(ref int[] inP) //пороговая
+//    {
+//        this.mul_w(ref inP);
+//        Sum();
+//        if (this.m_sum >= this.m_limit)
+//            return true;
+//        else return false;
+//    }
+//    public double Rez_th() //гиперболический тангенс
+//    {
+//        double result = 0.0;
+//        return result;
+//    }
+//    public double RezBipolarSigmoid(ref int[] inP) //Биполярный сигмоид
+//    {
+//        this.mul_w(ref inP);
+//        Sum();
+//        double result = 0.0;
+//        double y = ((2 / (1 + Math.Exp(-alpha * this.m_sum))) - 1);
+//        //result = (alpha * (1 - y * y) / 2);
+//        result = y;
+//        return result;
+//    }
+//    public void incW()
+//    {
+//        for (int x = 0; x < this.m_size; x++)
+//        {
+//            this.m_weight[x] += this.m_input[x];
+//        }
+//    }
+//    public void decW()
+//    {
+//        for (int x = 0; x < this.m_size; x++)
+//        {
+//            this.m_weight[x] -= this.m_input[x];
+//        }
+//    }
+
+//}
+
+//public class Neyro_Layer
+//{
+//    private Web_perceptron[] m_layer;
+//    private Web_perceptron[] m_layer2;
+//    private int m_size;
+//    private int[] m_inP;
+//    private int[] m_inP2;
+
+//    public Neyro_Layer(int size)
+//    {
+//        this.m_size = size;
+
+//        this.m_inP = new int[this.m_size];
+//        for (int i = 0; i < this.m_size; ++i)
+//        {
+//            this.m_inP[i] = 0;
+//        }
+
+//        this.m_inP2 = new int[this.m_size];
+//        for (int i = 0; i < this.m_size; ++i)
+//        {
+//            this.m_inP2[i] = 0;
+//        }
+
+//        m_layer = new Web_perceptron[m_size];
+//        for (int i=0; i < m_size; i++)
+//        {
+//            m_layer[i] = new Web_perceptron(m_size);
+//        }
+//        m_layer2 = new Web_perceptron[m_size];
+//        for (int i = 0; i < m_size; i++)
+//        {
+//            m_layer2[i] = new Web_perceptron(m_size);
+//        }
+//    }
+
+//    public int GetResult(int inP)
+//    {
+//        for (int i = 0; i < this.m_size; ++i)
+//        {
+//            if (inP > i)
+//                this.m_inP[i] = 1;
+//            else
+//                this.m_inP[i] = 0;
+//        }
+
+//        int result = 0;
+//        for (int i = 0; i < this.m_size; ++i)
+//        {
+//            if ( m_layer[i].RezThreshold(ref this.m_inP) )
+//                result++;
+//        }
+//        return result;
+//    }
+//    public double GetResultBPS(int inP)
+//    {
+//        for (int i = 0; i < this.m_size; ++i)
+//        {
+//            if (inP > i)
+//                this.m_inP[i] = 1;
+//            else
+//                this.m_inP[i] = 0;
+//        }
+
+//        double result = 0;
+//        for (int i = 0; i < this.m_size; ++i)
+//        {
+//            if (this.m_layer[i].RezThreshold(ref this.m_inP))
+//            { 
+//                result +=1.0;
+//                this.m_inP2[i] = 1;
+//            }
+//            else
+//            {
+//                this.m_inP2[i] = 0;
+//            }
+//        }
+//        for (int i = 0; i < this.m_size; ++i)
+//        {
+//            result += m_layer2[i].RezBipolarSigmoid(ref this.m_inP2);
+//        }
+//        return result;
+//    }
+
+//    public void Learning(int inP, int Answer)
+//    {
+//        //int Sum_Net = 0;
+//        for (int i = 0; i < m_size; ++i)
+//        {
+//            if (inP > i)
+//                this.m_inP[i] = 1;
+//            else
+//                this.m_inP[i] = 0;
+//        }
+//        for (int i = 0; i < this.m_size; ++i)
+//        {
+//            //if(this.m_layer[i].RezThreshold(ref this.m_inP))
+//               // Sum_Net+= this.m_layer[i].RezBipolarSigmoid(ref this.m_inP);
+
+//            if (!this.m_layer[i].RezThreshold(ref this.m_inP) && i < Answer)
+//                this.m_layer[i].incW();
+//            if (this.m_layer[i].RezThreshold(ref this.m_inP) && i > Answer)
+//                this.m_layer[i].decW();
+//        }
+//        /*
+//        for (int i = 0; i < this.m_size; ++i)
+//        {
+//            //if(this.m_layer[i].RezThreshold(ref this.m_inP))
+//            // Sum_Net+= this.m_layer[i].RezBipolarSigmoid(ref this.m_inP);
+
+//            if (!this.m_layer2[i].RezThreshold(ref this.m_inP) && i < Answer)
+//                this.m_layer2[i].incW();
+//            if (this.m_layer2[i].RezThreshold(ref this.m_inP) && i > Answer)
+//                this.m_layer2[i].decW();
+//        }
+
+//        for (int i = 0; i < this.m_size; ++i)
+//        {
+//            if (this.m_layer[i].RezThreshold(ref this.m_inP))
+//            {
+//                this.m_inP2[i] = 1;
+//            }
+//            else
+//            {
+//                this.m_inP2[i] = 0;
+//            }
+//        }
+//        */
+
+//        //if (Sum_Net < (double)Answer)
+//        //{
+//        //    for (int i = 0; i < this.m_size; ++i)
+//        //    {
+//        //        if (this.m_inP2[i]==1)
+//        //            this.m_layer2[i].incW();
+//        //    }
+//        //}
+//        //if (Sum_Net > (double)Answer)
+//        //{
+//        //    for (int i = 0; i < this.m_size; ++i)
+//        //    {
+//        //        if (this.m_inP2[i]!=1)
+//        //            this.m_layer2[i].decW();
+//        //    }
+//        //}
+
+//    }
+//}
+
+public class quadrocopterScript : MonoBehaviour
 {
-    private int[] m_mul; // Тут будем хранить отмасштабированные сигналы
-    private int[] m_weight; // Массив для хранения весов
-    private int[] m_input; // Входная информация
-    private int m_limit = 50; // Порог - выбран экспериментально, для быстрого обучения
-    private double alpha = 2; // sigmoid's alpha value
-    private int m_sum; // Тут сохраним сумму масштабированных сигналов
-    private int m_size;
-
-    public Web_perceptron(int size) // Задаем свойства при создании объекта
-    {
-        this.m_size = size;
-
-        this.m_weight = new int[this.m_size]; // Определяемся с размером массива (число входов)
-        this.m_mul = new int[this.m_size];
-        this.m_input = new int[this.m_size];
-    }
-    public void mul_w(ref int[] inP)
-    {
-
-        for (int x = 0; x < m_size; x++) // Пробегаем по каждому дендриду
-        {
-            this.m_input[x] = inP[x]; // Получаем входные данные
-            this.m_mul[x] = this.m_input[x] * this.m_weight[x]; // Умножаем его сигнал (0 или 1) на его собственный вес и сохраняем в массив.
-        }
-    }
-    public void Sum()
-    {
-        this.m_sum = 0;
-        for (int x = 0; x < this.m_size; x++)
-        {
-            this.m_sum += this.m_mul[x];
-        }
-    }
-    public bool RezThreshold(ref int[] inP) //пороговая
-    {
-        this.mul_w(ref inP);
-        Sum();
-        if (this.m_sum >= this.m_limit)
-            return true;
-        else return false;
-    }
-    public double Rez_th() //гиперболический тангенс
-    {
-        double result = 0.0;
-        return result;
-    }
-    public double RezBipolarSigmoid(ref int[] inP) //Биполярный сигмоид
-    {
-        this.mul_w(ref inP);
-        Sum();
-        double result = 0.0;
-        double y = ((2 / (1 + Math.Exp(-alpha * this.m_sum))) - 1);
-        //result = (alpha * (1 - y * y) / 2);
-        result = y;
-        return result;
-    }
-    public void incW()
-    {
-        for (int x = 0; x < this.m_size; x++)
-        {
-            this.m_weight[x] += this.m_input[x];
-        }
-    }
-    public void decW()
-    {
-        for (int x = 0; x < this.m_size; x++)
-        {
-            this.m_weight[x] -= this.m_input[x];
-        }
-    }
-
-}
-
-public class Neyro_Layer
-{
-    private Web_perceptron[] m_layer;
-    private Web_perceptron[] m_layer2;
-    private int m_size;
-    private int[] m_inP;
-    private int[] m_inP2;
-
-    public Neyro_Layer(int size)
-    {
-        this.m_size = size;
-
-        this.m_inP = new int[this.m_size];
-        for (int i = 0; i < this.m_size; ++i)
-        {
-            this.m_inP[i] = 0;
-        }
-
-        this.m_inP2 = new int[this.m_size];
-        for (int i = 0; i < this.m_size; ++i)
-        {
-            this.m_inP2[i] = 0;
-        }
-
-        m_layer = new Web_perceptron[m_size];
-        for (int i=0; i < m_size; i++)
-        {
-            m_layer[i] = new Web_perceptron(m_size);
-        }
-        m_layer2 = new Web_perceptron[m_size];
-        for (int i = 0; i < m_size; i++)
-        {
-            m_layer2[i] = new Web_perceptron(m_size);
-        }
-    }
-
-    public int GetResult(int inP)
-    {
-        for (int i = 0; i < this.m_size; ++i)
-        {
-            if (inP > i)
-                this.m_inP[i] = 1;
-            else
-                this.m_inP[i] = 0;
-        }
-
-        int result = 0;
-        for (int i = 0; i < this.m_size; ++i)
-        {
-            if ( m_layer[i].RezThreshold(ref this.m_inP) )
-                result++;
-        }
-        return result;
-    }
-    public double GetResultBPS(int inP)
-    {
-        for (int i = 0; i < this.m_size; ++i)
-        {
-            if (inP > i)
-                this.m_inP[i] = 1;
-            else
-                this.m_inP[i] = 0;
-        }
-
-        double result = 0;
-        for (int i = 0; i < this.m_size; ++i)
-        {
-            if (this.m_layer[i].RezThreshold(ref this.m_inP))
-            { 
-                result +=1.0;
-                this.m_inP2[i] = 1;
-            }
-            else
-            {
-                this.m_inP2[i] = 0;
-            }
-        }
-        for (int i = 0; i < this.m_size; ++i)
-        {
-            result += m_layer2[i].RezBipolarSigmoid(ref this.m_inP2);
-        }
-        return result;
-    }
-
-    public void Learning(int inP, int Answer)
-    {
-        //int Sum_Net = 0;
-        for (int i = 0; i < m_size; ++i)
-        {
-            if (inP > i)
-                this.m_inP[i] = 1;
-            else
-                this.m_inP[i] = 0;
-        }
-        for (int i = 0; i < this.m_size; ++i)
-        {
-            //if(this.m_layer[i].RezThreshold(ref this.m_inP))
-               // Sum_Net+= this.m_layer[i].RezBipolarSigmoid(ref this.m_inP);
-            
-            if (!this.m_layer[i].RezThreshold(ref this.m_inP) && i < Answer)
-                this.m_layer[i].incW();
-            if (this.m_layer[i].RezThreshold(ref this.m_inP) && i > Answer)
-                this.m_layer[i].decW();
-        }
-        /*
-        for (int i = 0; i < this.m_size; ++i)
-        {
-            //if(this.m_layer[i].RezThreshold(ref this.m_inP))
-            // Sum_Net+= this.m_layer[i].RezBipolarSigmoid(ref this.m_inP);
-
-            if (!this.m_layer2[i].RezThreshold(ref this.m_inP) && i < Answer)
-                this.m_layer2[i].incW();
-            if (this.m_layer2[i].RezThreshold(ref this.m_inP) && i > Answer)
-                this.m_layer2[i].decW();
-        }
-
-        for (int i = 0; i < this.m_size; ++i)
-        {
-            if (this.m_layer[i].RezThreshold(ref this.m_inP))
-            {
-                this.m_inP2[i] = 1;
-            }
-            else
-            {
-                this.m_inP2[i] = 0;
-            }
-        }
-        */
-
-        //if (Sum_Net < (double)Answer)
-        //{
-        //    for (int i = 0; i < this.m_size; ++i)
-        //    {
-        //        if (this.m_inP2[i]==1)
-        //            this.m_layer2[i].incW();
-        //    }
-        //}
-        //if (Sum_Net > (double)Answer)
-        //{
-        //    for (int i = 0; i < this.m_size; ++i)
-        //    {
-        //        if (this.m_inP2[i]!=1)
-        //            this.m_layer2[i].decW();
-        //    }
-        //}
-
-    }
-}
-
-public class quadrocopterScript : MonoBehaviour {
     //нейронная сеть регулировки высоты
-    private static Neyro_Layer H_neyro = new Neyro_Layer(300);
+    //private static Neyro_Layer H_neyro = new Neyro_Layer(300);
+    private static int[] Layers = { 100, 1 };
+    private static NeuralNW Net_H = new NeuralNW(3, Layers);
+    public double Kerr;
+    public double Klern = 0.05;
     public bool H_neyro_on = false;
     public double thrLimit;
 
@@ -571,6 +577,30 @@ public class quadrocopterScript : MonoBehaviour {
             gps_XHZ.y = pos.y; // Высота у нас с барометра берется, и не ограничена одной посылкой в секунду
         }
     }
+    double[] deltaH = new double[3];
+    private float h_timer;
+    private double h_save;
+    private void GetH(out double h)
+    {
+        h_timer += Time.deltaTime;
+        Vector3 pos = GameObject.Find("Sensors").GetComponent<Transform>().position;
+        if (h_timer > 0.005) //200Гц
+        {
+            //H Neyron
+            h_save = h = pos.y;
+            deltaH[2] = deltaH[1];
+            deltaH[1] = deltaH[0];
+            deltaH[0] = (targetH - H_);
+            deltaH[0] = deltaH[0] < -50 ? -50 : deltaH[0];
+            deltaH[0] = deltaH[0] > 50 ? 50 : deltaH[0];
+            deltaH[0] /= 100.0;
+            h_timer = 0.0f;
+        }
+        else
+        {
+            h = h_save;
+        }
+    }
     void readRotation () {
 
         //фактическая ориентация квадрокоптера,
@@ -620,37 +650,43 @@ public class quadrocopterScript : MonoBehaviour {
         //double geo_K = 0.02;
         geo_X = geo_X + (gps_XHZ.x - geo_X) * geo_K;
         geo_Z = geo_Z + (gps_XHZ.z - geo_Z) * geo_K;
-        
-        H_ = gps_XHZ.y;
+
+        GetH(out H_);
+        //H_ = gps_XHZ.y;
 
         //Вычисляем необходимые параметры крена, тангажа и газа, зля достижения заданных координат
-        double dthr = H_PID.calc(H_, targetH);
-        dthr = dthr < 0 ? 0 : dthr;
-        thrLimit = dthr > 100 ? 100 : dthr;
-        throttle = thrLimit;
+        double[] dthr = new double[1];
+        dthr[0] = H_PID.calc(H_, targetH);
+        dthr[0] = dthr[0] < 0 ? 0 : dthr[0];
+        throttle = dthr[0] = dthr[0] > 100 ? 100 : dthr[0];
 
-        //H Neyron
-        int deltaH = (int)((targetH - H_) * 10.0);
-        deltaH += 150;
-        deltaH = deltaH < 0 ? 0 : deltaH;
-        deltaH = deltaH > 300 ? 300 : deltaH;
+       
 
         if (H_neyro_on)
         {
-            dthr = (double)H_neyro.GetResult(deltaH) / 10.0;
+            //dthr = (double)H_neyro.GetResult(deltaH) / 50.0 + 20;
             //dthr = (double)H_neyro.GetResultBPS(deltaH) / 10.0;
-            dthr = dthr < 0 ? 0 : dthr;
-            thrLimit = dthr > 50 ? 50 : dthr;
+            Net_H.NetOUT(deltaH, out dthr);
+            dthr[0] *= 100.0;
+            dthr[0] = dthr[0] < 0 ? 0 : dthr[0];
+            thrLimit = dthr[0] > 100 ? 100 : dthr[0];
             throttle = thrLimit;
         }
         else
         {
-            int answer = (int)(dthr * 10.0);
-            H_neyro.Learning(deltaH, answer);
-            dthr = (double)H_neyro.GetResult(deltaH) / 10.0;
+            //double answer = dthr;
+            dthr[0] /= 100.0;
+            do {
+                Kerr = Net_H.LernNW(deltaH, dthr, Klern);
+            } while (Kerr > 1E-4);
+            //int answer = (int)((dthr-20) * 50.0);
+            //H_neyro.Learning(deltaH, answer);
+            //dthr = (double)H_neyro.GetResult(deltaH) / 50.0 + 20;
             //dthr = (double)H_neyro.GetResultBPS(deltaH) / 10.0;
-            dthr = dthr < 0 ? 0 : dthr;
-            thrLimit = dthr > 50 ? 50 : dthr;
+            Net_H.NetOUT(deltaH, out dthr);
+            dthr[0] *= 100.0;
+            dthr[0] = dthr[0] < 0 ? 0 : dthr[0];
+            thrLimit = dthr[0] > 100 ? 100 : dthr[0];
         }
 
         target.y = 0;
