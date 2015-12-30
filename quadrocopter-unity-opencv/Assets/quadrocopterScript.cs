@@ -235,11 +235,20 @@ public class quadrocopterScript : MonoBehaviour
     //нейронная сеть регулировки высоты
     //private static Neyro_Layer H_neyro = new Neyro_Layer(300);
     private static int[] Layers = { 100, 1 };
-    private static NeuralNW Net_H = new NeuralNW(3, Layers);
+    private static NeuralNW Net_H = new NeuralNW(4, Layers);
+
     public double Kerr;
     public double Klern = 0.05;
+
     public bool H_neyro_on = false;
     public double thrLimit;
+
+    private static int[] LayersA = { 100, 2 };
+    private static NeuralNW Net_axelconv = new NeuralNW(4, LayersA);
+    public bool axel_neyro_on = false;
+    public double A_net_x;
+    public double A_net_y;
+    public double A_net_z;
 
     //axel autopulot
 
@@ -492,6 +501,7 @@ public class quadrocopterScript : MonoBehaviour
     private Vector3 lastVelocity;
     private float sensor_timer;
     private Vector3 acceleration_save;
+    private float AY_neyr;
     //получаем показания акселерометров
     public Vector3 GetSensors()
     {
@@ -525,6 +535,7 @@ public class quadrocopterScript : MonoBehaviour
             //измеряем ускорение через изменение скорости
             
             LinearAcceleration(out acceleration, pos, 50);
+            AY_neyr = acceleration.y;
             lastVelocity = GameObject.Find("Frame").GetComponent<Rigidbody>().velocity;
             acceleration += grav; //добавляем ускорение свободного падения
 
@@ -577,7 +588,7 @@ public class quadrocopterScript : MonoBehaviour
             gps_XHZ.y = pos.y; // Высота у нас с барометра берется, и не ограничена одной посылкой в секунду
         }
     }
-    double[] deltaH = new double[3];
+    double[] deltaH = new double[4];
     private float h_timer;
     private double h_save;
     private void GetH(out double h)
@@ -587,7 +598,8 @@ public class quadrocopterScript : MonoBehaviour
         if (h_timer > 0.005) //200Гц
         {
             //H Neyron
-            h_save = h = pos.y;
+            deltaH[3] = AY_neyr;
+           h_save = h = pos.y;
             deltaH[2] = deltaH[1];
             deltaH[1] = deltaH[0];
             deltaH[0] = (targetH - H_);
@@ -595,12 +607,24 @@ public class quadrocopterScript : MonoBehaviour
             deltaH[0] = deltaH[0] > 50 ? 50 : deltaH[0];
             deltaH[0] /= 100.0;
             h_timer = 0.0f;
+
         }
         else
         {
             h = h_save;
         }
     }
+    private float netsave_timer;
+    private void NetSave()
+    {
+        netsave_timer += Time.deltaTime;
+        if(netsave_timer > 60)
+        {
+            Net_axelconv.SaveNW("net_axelconv.txt");
+            netsave_timer = 0.0f;
+        }
+    }
+   private  double[] A_ = new double[4];
     void readRotation () {
 
         //фактическая ориентация квадрокоптера,
@@ -637,6 +661,7 @@ public class quadrocopterScript : MonoBehaviour
         girotest_pos.z = pos.z;
         
         GameObject.Find("Cube_girotest").GetComponent<Transform>().position = girotest_pos;
+       
 
         //Получаем параметры GPS для автопилота
 
@@ -660,57 +685,116 @@ public class quadrocopterScript : MonoBehaviour
         dthr[0] = dthr[0] < 0 ? 0 : dthr[0];
         throttle = dthr[0] = dthr[0] > 100 ? 100 : dthr[0];
 
-       
-
-        if (H_neyro_on)
+        //Save data
+        /*
+        System.IO.FileInfo file = new System.IO.FileInfo("data_time_h_thr.txt");
+        String text;
+        if (file.Exists == false) //Если файл не существует
         {
-            //dthr = (double)H_neyro.GetResult(deltaH) / 50.0 + 20;
-            //dthr = (double)H_neyro.GetResultBPS(deltaH) / 10.0;
-            Net_H.NetOUT(deltaH, out dthr);
-            dthr[0] *= 100.0;
-            dthr[0] = dthr[0] < 0 ? 0 : dthr[0];
-            thrLimit = dthr[0] > 100 ? 100 : dthr[0];
-            throttle = thrLimit;
+            file.Create(); //Создаем
+            text = "Time; " + "H; " + "TargH;" + "Ay;" + "thrott";
         }
         else
         {
-            //double answer = dthr;
-            dthr[0] /= 100.0;
-            do {
-                Kerr = Net_H.LernNW(deltaH, dthr, Klern);
-            } while (Kerr > 1E-4);
-            //int answer = (int)((dthr-20) * 50.0);
-            //H_neyro.Learning(deltaH, answer);
-            //dthr = (double)H_neyro.GetResult(deltaH) / 50.0 + 20;
-            //dthr = (double)H_neyro.GetResultBPS(deltaH) / 10.0;
-            Net_H.NetOUT(deltaH, out dthr);
-            dthr[0] *= 100.0;
-            dthr[0] = dthr[0] < 0 ? 0 : dthr[0];
-            thrLimit = dthr[0] > 100 ? 100 : dthr[0];
+            text = Time.time.ToString() + "; " + H_.ToString() + "; " + targetH.ToString() + "; " + Ay.ToString() + "; " + throttle.ToString();
         }
+        System.IO.StreamWriter stream_writer;
+        stream_writer = file.AppendText();
+        stream_writer.WriteLine(text);
+        stream_writer.Close();
+      */
+        
+        /*
+         if (H_neyro_on)
+         {
+             Net_H.NetOUT(deltaH, out dthr);
+             dthr[0] *= 100.0;
+             dthr[0] = dthr[0] < 0 ? 0 : dthr[0];
+             thrLimit = dthr[0] > 100 ? 100 : dthr[0];
+             throttle = thrLimit;
+         }
+         else
+         {
+             dthr[0] /= 100.0;
+             do {
+                 Kerr = Net_H.LernNW(deltaH, dthr, Klern);
+             } while (Kerr > 1E-4);
 
+             Net_H.NetOUT(deltaH, out dthr);
+             dthr[0] *= 100.0;
+             dthr[0] = dthr[0] < 0 ? 0 : dthr[0];
+             thrLimit = dthr[0] > 100 ? 100 : dthr[0];
+         }
+         */
         target.y = 0;
         double LimitAngle = 40;
-
-        double dRoll = X_PID.calc(geo_X, targetX);
-        dRoll = dRoll < -LimitAngle ? -LimitAngle : dRoll;
-        dRoll = dRoll > LimitAngle ? LimitAngle : dRoll;
-        //targetRoll = -dRoll;
-        target.x = (float)dRoll;
 
         double dPitch = Z_PID.calc(geo_Z, targetZ);
         dPitch = dPitch < -LimitAngle ? -LimitAngle : dPitch;
         dPitch = dPitch > LimitAngle ? LimitAngle : dPitch;
-        // targetPitch = dPitch;
-        target.z = (float)dPitch;
+        target.x = (float)dPitch;
 
+        double dRoll = X_PID.calc(geo_X, targetX);
+        dRoll = dRoll < -LimitAngle ? -LimitAngle : dRoll;
+        dRoll = dRoll > LimitAngle ? LimitAngle : dRoll;
+        target.z = (float)dRoll;
+
+//neyro
+        double dgeoX = geo_X - targetX;
+        dgeoX = dgeoX < -20.0 ? -20.0 : dgeoX;
+        dgeoX = dgeoX > 20.0 ? 20.0 : dgeoX;
+        dgeoX /= 40.0;
+        double dgeoZ = geo_Z - targetZ;
+        dgeoX = dgeoZ < -20.0 ? -20.0 : dgeoZ;
+        dgeoX = dgeoZ > 20.0 ? 20.0 : dgeoZ;
+        dgeoZ /= 40.0;
+         
+        GameObject.Find("Acube").GetComponent<Transform>().position = girotest_pos;
+        GameObject.Find("Acube").GetComponent<Transform>().rotation = Quaternion.FromToRotation(GameObject.Find("Acube").GetComponent<Transform>().rotation.eulerAngles, Vector3.zero);
+        //GameObject.Find("Acube").GetComponent<Transform>().Rotate(accel_rot);
+       
+        A_[0] = accel_rot.x / 80.0;
+        A_[1] = accel_rot.z / 80.0;
+        A_[2] = dgeoX;
+        A_[3] = dgeoZ;
+
+
+        double[] A_rot = new double[2];
+        A_rot[0] = (target.x + 40.0) / 80.0;
+        A_rot[1] = (target.z + 40.0) / 80.0;
+        Vector3 n_target;
+        if (axel_neyro_on)
+        {
+            Net_axelconv.NetOUT(A_, out A_rot);
+            target.x = (float)(A_rot[0]*80.0) -40.0f;
+            target.z = (float)(A_rot[1]*80.0) -40.0f;
+            A_net_x = target.x;
+            A_net_z = target.z;
+        }
+        else
+        {
+           // do {
+                Kerr = Net_axelconv.LernNW(A_, A_rot, Klern);
+          //  } while (Kerr > 1E-2);
+            Net_axelconv.NetOUT(A_, out A_rot);
+            A_net_x = A_rot[0]*80.0 - 40.0f;
+            A_net_z = A_rot[1]*80.0 - 40.0f;
+
+            NetSave();
+        }
+  //neyroend
         //поворачиваем расчетные значения на отклонение от севера
-        target = (Quaternion.Euler(target.x, 0, target.z)* Quaternion.Euler(0, rot.y, 0)).eulerAngles;
-       // targetYaw = (float)(360.0f / 2 * Math.PI) * (float)Math.Asin((targetX - geo_X) / Math.Sqrt(Math.Pow((targetX - geo_X), 2) + Math.Pow((targetZ - geo_Z), 2))); 
+        target = (Quaternion.Euler(target.x, 0, -target.z)* Quaternion.Euler(0, rot.y, 0)).eulerAngles;
+        n_target.x = (float)A_net_x;
+        n_target.z = (float)A_net_z;
+        n_target = (Quaternion.Euler(n_target.x, 0, -n_target.z) * Quaternion.Euler(0, rot.y, 0)).eulerAngles;
+        GameObject.Find("Acube").GetComponent<Transform>().Rotate(n_target);
+
+        // targetYaw = (float)(360.0f / 2 * Math.PI) * (float)Math.Asin((targetX - geo_X) / Math.Sqrt(Math.Pow((targetX - geo_X), 2) + Math.Pow((targetZ - geo_Z), 2))); 
         //применяем расчитанные допустимые целевые значения крена и тангажа
 
-        targetPitch = target.z;
-        targetRoll = -target.x;
+        targetPitch = target.x;
+        targetRoll = target.z;
 
         //углы расчитанные из акселерометров
 
