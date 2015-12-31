@@ -6,246 +6,26 @@ using System.Collections.Generic;
 using System.Linq;
 using ClassLibraryNeuralNetworks;
 
-//public class Web_perceptron
-//{
-//    private int[] m_mul; // Тут будем хранить отмасштабированные сигналы
-//    private int[] m_weight; // Массив для хранения весов
-//    private int[] m_input; // Входная информация
-//    private int m_limit = 50; // Порог - выбран экспериментально, для быстрого обучения
-//    private double alpha = 2; // sigmoid's alpha value
-//    private int m_sum; // Тут сохраним сумму масштабированных сигналов
-//    private int m_size;
-
-//    public Web_perceptron(int size) // Задаем свойства при создании объекта
-//    {
-//        this.m_size = size;
-
-//        this.m_weight = new int[this.m_size]; // Определяемся с размером массива (число входов)
-//        this.m_mul = new int[this.m_size];
-//        this.m_input = new int[this.m_size];
-//    }
-//    public void mul_w(ref int[] inP)
-//    {
-
-//        for (int x = 0; x < m_size; x++) // Пробегаем по каждому дендриду
-//        {
-//            this.m_input[x] = inP[x]; // Получаем входные данные
-//            this.m_mul[x] = this.m_input[x] * this.m_weight[x]; // Умножаем его сигнал (0 или 1) на его собственный вес и сохраняем в массив.
-//        }
-//    }
-//    public void Sum()
-//    {
-//        this.m_sum = 0;
-//        for (int x = 0; x < this.m_size; x++)
-//        {
-//            this.m_sum += this.m_mul[x];
-//        }
-//    }
-//    public bool RezThreshold(ref int[] inP) //пороговая
-//    {
-//        this.mul_w(ref inP);
-//        Sum();
-//        if (this.m_sum >= this.m_limit)
-//            return true;
-//        else return false;
-//    }
-//    public double Rez_th() //гиперболический тангенс
-//    {
-//        double result = 0.0;
-//        return result;
-//    }
-//    public double RezBipolarSigmoid(ref int[] inP) //Биполярный сигмоид
-//    {
-//        this.mul_w(ref inP);
-//        Sum();
-//        double result = 0.0;
-//        double y = ((2 / (1 + Math.Exp(-alpha * this.m_sum))) - 1);
-//        //result = (alpha * (1 - y * y) / 2);
-//        result = y;
-//        return result;
-//    }
-//    public void incW()
-//    {
-//        for (int x = 0; x < this.m_size; x++)
-//        {
-//            this.m_weight[x] += this.m_input[x];
-//        }
-//    }
-//    public void decW()
-//    {
-//        for (int x = 0; x < this.m_size; x++)
-//        {
-//            this.m_weight[x] -= this.m_input[x];
-//        }
-//    }
-
-//}
-
-//public class Neyro_Layer
-//{
-//    private Web_perceptron[] m_layer;
-//    private Web_perceptron[] m_layer2;
-//    private int m_size;
-//    private int[] m_inP;
-//    private int[] m_inP2;
-
-//    public Neyro_Layer(int size)
-//    {
-//        this.m_size = size;
-
-//        this.m_inP = new int[this.m_size];
-//        for (int i = 0; i < this.m_size; ++i)
-//        {
-//            this.m_inP[i] = 0;
-//        }
-
-//        this.m_inP2 = new int[this.m_size];
-//        for (int i = 0; i < this.m_size; ++i)
-//        {
-//            this.m_inP2[i] = 0;
-//        }
-
-//        m_layer = new Web_perceptron[m_size];
-//        for (int i=0; i < m_size; i++)
-//        {
-//            m_layer[i] = new Web_perceptron(m_size);
-//        }
-//        m_layer2 = new Web_perceptron[m_size];
-//        for (int i = 0; i < m_size; i++)
-//        {
-//            m_layer2[i] = new Web_perceptron(m_size);
-//        }
-//    }
-
-//    public int GetResult(int inP)
-//    {
-//        for (int i = 0; i < this.m_size; ++i)
-//        {
-//            if (inP > i)
-//                this.m_inP[i] = 1;
-//            else
-//                this.m_inP[i] = 0;
-//        }
-
-//        int result = 0;
-//        for (int i = 0; i < this.m_size; ++i)
-//        {
-//            if ( m_layer[i].RezThreshold(ref this.m_inP) )
-//                result++;
-//        }
-//        return result;
-//    }
-//    public double GetResultBPS(int inP)
-//    {
-//        for (int i = 0; i < this.m_size; ++i)
-//        {
-//            if (inP > i)
-//                this.m_inP[i] = 1;
-//            else
-//                this.m_inP[i] = 0;
-//        }
-
-//        double result = 0;
-//        for (int i = 0; i < this.m_size; ++i)
-//        {
-//            if (this.m_layer[i].RezThreshold(ref this.m_inP))
-//            { 
-//                result +=1.0;
-//                this.m_inP2[i] = 1;
-//            }
-//            else
-//            {
-//                this.m_inP2[i] = 0;
-//            }
-//        }
-//        for (int i = 0; i < this.m_size; ++i)
-//        {
-//            result += m_layer2[i].RezBipolarSigmoid(ref this.m_inP2);
-//        }
-//        return result;
-//    }
-
-//    public void Learning(int inP, int Answer)
-//    {
-//        //int Sum_Net = 0;
-//        for (int i = 0; i < m_size; ++i)
-//        {
-//            if (inP > i)
-//                this.m_inP[i] = 1;
-//            else
-//                this.m_inP[i] = 0;
-//        }
-//        for (int i = 0; i < this.m_size; ++i)
-//        {
-//            //if(this.m_layer[i].RezThreshold(ref this.m_inP))
-//               // Sum_Net+= this.m_layer[i].RezBipolarSigmoid(ref this.m_inP);
-
-//            if (!this.m_layer[i].RezThreshold(ref this.m_inP) && i < Answer)
-//                this.m_layer[i].incW();
-//            if (this.m_layer[i].RezThreshold(ref this.m_inP) && i > Answer)
-//                this.m_layer[i].decW();
-//        }
-//        /*
-//        for (int i = 0; i < this.m_size; ++i)
-//        {
-//            //if(this.m_layer[i].RezThreshold(ref this.m_inP))
-//            // Sum_Net+= this.m_layer[i].RezBipolarSigmoid(ref this.m_inP);
-
-//            if (!this.m_layer2[i].RezThreshold(ref this.m_inP) && i < Answer)
-//                this.m_layer2[i].incW();
-//            if (this.m_layer2[i].RezThreshold(ref this.m_inP) && i > Answer)
-//                this.m_layer2[i].decW();
-//        }
-
-//        for (int i = 0; i < this.m_size; ++i)
-//        {
-//            if (this.m_layer[i].RezThreshold(ref this.m_inP))
-//            {
-//                this.m_inP2[i] = 1;
-//            }
-//            else
-//            {
-//                this.m_inP2[i] = 0;
-//            }
-//        }
-//        */
-
-//        //if (Sum_Net < (double)Answer)
-//        //{
-//        //    for (int i = 0; i < this.m_size; ++i)
-//        //    {
-//        //        if (this.m_inP2[i]==1)
-//        //            this.m_layer2[i].incW();
-//        //    }
-//        //}
-//        //if (Sum_Net > (double)Answer)
-//        //{
-//        //    for (int i = 0; i < this.m_size; ++i)
-//        //    {
-//        //        if (this.m_inP2[i]!=1)
-//        //            this.m_layer2[i].decW();
-//        //    }
-//        //}
-
-//    }
-//}
 
 public class quadrocopterScript : MonoBehaviour
 {
-    //нейронная сеть регулировки высоты
-    //private static Neyro_Layer H_neyro = new Neyro_Layer(300);
-    private static int[] Layers = { 100, 1 };
-    private static NeuralNW Net_H = new NeuralNW(4, Layers);
+    //нейронная сеть
 
     public double Kerr;
     public double Klern = 0.05;
 
+    // регулировки высоты
+    private static int[] Layers = { 100, 1 };
+    private static NeuralNW Net_H = new NeuralNW(4, Layers);
+    
     public bool H_neyro_on = false;
     public double thrLimit;
-
-    private static int[] LayersA = { 100, 2 };
+    
+    // регулировка тангажа
+    private static int[] LayersA = { 200, 1 };
     private static NeuralNW Net_axelconv = new NeuralNW(4, LayersA);
     public bool axel_neyro_on = false;
+
     public double A_net_x;
     public double A_net_y;
     public double A_net_z;
@@ -345,19 +125,19 @@ public class quadrocopterScript : MonoBehaviour
                 d_time = 0.0f;
 
                 System.Random rnd = new System.Random();
-                double rnd_ = Convert.ToDouble(rnd.Next(-1000, 1000)) * 0.001f * 10;
+                double rnd_ = Convert.ToDouble(rnd.Next(-1000, 1000)) * 0.001f * 50;
                 targetX = rnd_;
 
                 rnd = new System.Random();
-                rnd_ = Convert.ToDouble(rnd.Next(-1000, 1000)) * 0.001f * 10;
+                rnd_ = Convert.ToDouble(rnd.Next(-1000, 1000)) * 0.001f * 50;
                 targetZ = rnd_;
-
+                /*
                 rnd = new System.Random();
                 rnd_ = Convert.ToDouble(rnd.Next(0, 1000)) * 0.001f * 360;
                 targetYaw = rnd_;
-
+                */
                 rnd = new System.Random();
-                rnd_ = 15 + Convert.ToDouble(rnd.Next(0, 1000)) * 0.001f * 10;
+                rnd_ = 30 + Convert.ToDouble(rnd.Next(0, 1000)) * 0.001f * 10;
                 targetH = rnd_;
             }
         }
@@ -581,6 +361,10 @@ public class quadrocopterScript : MonoBehaviour
             
             gps_save = gps_XHZ;
             gps_timer = 0.0f;
+
+            //Neyron
+            A_[0] = A_[1];
+            A_[1] = A_[2];
         }
         else
         {
@@ -624,7 +408,53 @@ public class quadrocopterScript : MonoBehaviour
             netsave_timer = 0.0f;
         }
     }
-   private  double[] A_ = new double[4];
+
+    class KalmanFilterSimple1D
+    {
+        public double X0 { get; private set; } // predicted state
+        public double P0 { get; private set; } // predicted covariance
+
+        public double F { get; private set; } // factor of real value to previous real value
+        public double Q { get; private set; } // measurement noise
+        public double H { get; private set; } // factor of measured value to real value
+        public double R { get; private set; } // environment noise
+
+        public double State { get; private set; }
+        public double Covariance { get; private set; }
+
+        public KalmanFilterSimple1D(double q, double r, double f = 1, double h = 1)
+        {
+            Q = q;
+            R = r;
+            F = f;
+            H = h;
+        }
+
+        public void SetState(double state, double covariance)
+        {
+            State = state;
+            Covariance = covariance;
+        }
+
+        public void Correct(double data)
+        {
+            //time update - prediction
+            X0 = F * State;
+            P0 = F * Covariance * F + Q;
+
+            //measurement update - correction
+            var K = H * P0 / (H * P0 * H + R);
+            State = X0 + K * (data - H * X0);
+            Covariance = (1 - K * H) * P0;
+        }
+    }
+    private static KalmanFilterSimple1D kalman_x = new KalmanFilterSimple1D(f: 1, h: 1, q: 500.8, r: 1050.85); // задаем F, H, Q и R
+    private static KalmanFilterSimple1D kalman_y = new KalmanFilterSimple1D(f: 1, h: 1, q: 500.8, r: 1050.85);
+    private static KalmanFilterSimple1D kalman_z = new KalmanFilterSimple1D(f: 1, h: 1, q: 500.8, r: 1050.85);
+
+    private static KalmanFilterSimple1D kalman_gps_x = new KalmanFilterSimple1D(f: 1, h: 1, q: 5.0, r: 15.0); 
+    private static KalmanFilterSimple1D kalman_gps_z = new KalmanFilterSimple1D(f: 1, h: 1, q: 5.0, r: 15.0); 
+    private  double[] A_ = new double[4];
     void readRotation () {
 
         //фактическая ориентация квадрокоптера,
@@ -640,6 +470,14 @@ public class quadrocopterScript : MonoBehaviour
         Ax = acceleration.x;
         Ay = acceleration.y;
         Az = acceleration.z;
+
+       // kalman.SetState(0.0, 0.1); // Задаем начальные значение State и Covariance
+        kalman_x.Correct(acceleration.x);
+        Ax = kalman_x.State;
+        kalman_y.Correct(acceleration.y);
+        Ay = kalman_y.State;
+        kalman_z.Correct(acceleration.z);
+        Az = kalman_z.State;
 
         //получаем углы на которые акселерометры по трем осям повернуты относительно земли
         Vector3 accel_rot = Vector3.zero;
@@ -668,13 +506,16 @@ public class quadrocopterScript : MonoBehaviour
         Vector3 target;
         Vector3 gps_XHZ;
         GetGPS(out gps_XHZ);
-
-        //double geo_K = 0.002;
-        //double geo_K = 0.005;
+        /*
         double geo_K = 0.01;
-        //double geo_K = 0.02;
+
         geo_X = geo_X + (gps_XHZ.x - geo_X) * geo_K;
         geo_Z = geo_Z + (gps_XHZ.z - geo_Z) * geo_K;
+        */
+        kalman_gps_x.Correct(gps_XHZ.x);
+        geo_X = kalman_gps_x.State;
+        kalman_gps_z.Correct(gps_XHZ.z);
+        geo_Z = kalman_gps_z.State;
 
         GetH(out H_);
         //H_ = gps_XHZ.y;
@@ -686,7 +527,7 @@ public class quadrocopterScript : MonoBehaviour
         throttle = dthr[0] = dthr[0] > 100 ? 100 : dthr[0];
 
         //Save data
-        /*
+      /*  
         System.IO.FileInfo file = new System.IO.FileInfo("data_time_h_thr.txt");
         String text;
         if (file.Exists == false) //Если файл не существует
@@ -729,47 +570,48 @@ public class quadrocopterScript : MonoBehaviour
         target.y = 0;
         double LimitAngle = 40;
 
-        double dPitch = Z_PID.calc(geo_Z, targetZ);
+        double dPitch = Z_PID.calc(geo_Z, targetZ); 
         dPitch = dPitch < -LimitAngle ? -LimitAngle : dPitch;
         dPitch = dPitch > LimitAngle ? LimitAngle : dPitch;
-        target.x = (float)dPitch;
+        target.z = (float)dPitch;
 
         double dRoll = X_PID.calc(geo_X, targetX);
         dRoll = dRoll < -LimitAngle ? -LimitAngle : dRoll;
         dRoll = dRoll > LimitAngle ? LimitAngle : dRoll;
-        target.z = (float)dRoll;
+        target.x = (float)dRoll;
 
 //neyro
-        double dgeoX = geo_X - targetX;
-        dgeoX = dgeoX < -20.0 ? -20.0 : dgeoX;
-        dgeoX = dgeoX > 20.0 ? 20.0 : dgeoX;
-        dgeoX /= 40.0;
-        double dgeoZ = geo_Z - targetZ;
-        dgeoX = dgeoZ < -20.0 ? -20.0 : dgeoZ;
-        dgeoX = dgeoZ > 20.0 ? 20.0 : dgeoZ;
-        dgeoZ /= 40.0;
+        double dgeoX = targetX - geo_X;
+        dgeoX = dgeoX < -10.0 ? -10.0 : dgeoX;
+        dgeoX = dgeoX > 10.0 ? 10.0 : dgeoX;
+        dgeoX /= 10.0;
+
+        double dgeoZ = targetZ - geo_Z;
+        dgeoZ = dgeoZ < -10.0 ? -10.0 : dgeoZ;
+        dgeoZ = dgeoZ > 10.0 ? 10.0 : dgeoZ;
+        dgeoZ = dgeoZ / 10.0;
          
         GameObject.Find("Acube").GetComponent<Transform>().position = girotest_pos;
         GameObject.Find("Acube").GetComponent<Transform>().rotation = Quaternion.FromToRotation(GameObject.Find("Acube").GetComponent<Transform>().rotation.eulerAngles, Vector3.zero);
         //GameObject.Find("Acube").GetComponent<Transform>().Rotate(accel_rot);
-       
-        A_[0] = accel_rot.x / 80.0;
-        A_[1] = accel_rot.z / 80.0;
+
+        // A_[0] = accel_rot.x / 80.0;
+        // A_[1] = accel_rot.z / 80.0;
+
         A_[2] = dgeoX;
-        A_[3] = dgeoZ;
+        //A_[3] = Ax / 20.0;
 
-
-        double[] A_rot = new double[2];
+        double[] A_rot = new double[1];
         A_rot[0] = (target.x + 40.0) / 80.0;
-        A_rot[1] = (target.z + 40.0) / 80.0;
+       // A_rot[1] = (target.z + 40.0) / 80.0;
         Vector3 n_target;
         if (axel_neyro_on)
         {
             Net_axelconv.NetOUT(A_, out A_rot);
-            target.x = (float)(A_rot[0]*80.0) -40.0f;
-            target.z = (float)(A_rot[1]*80.0) -40.0f;
-            A_net_x = target.x;
-            A_net_z = target.z;
+            A_net_x = (A_rot[0]*80.0) -40.0f;
+            //target.z = (float)(A_rot[1]*80.0) -40.0f;
+            target.x = (float)A_net_x;
+           // A_net_z = target.z;
         }
         else
         {
@@ -778,23 +620,25 @@ public class quadrocopterScript : MonoBehaviour
           //  } while (Kerr > 1E-2);
             Net_axelconv.NetOUT(A_, out A_rot);
             A_net_x = A_rot[0]*80.0 - 40.0f;
-            A_net_z = A_rot[1]*80.0 - 40.0f;
+            target.x = (float)A_net_x;
+            // A_net_z = A_rot[1]*80.0 - 40.0f;
 
             NetSave();
         }
   //neyroend
         //поворачиваем расчетные значения на отклонение от севера
-        target = (Quaternion.Euler(target.x, 0, -target.z)* Quaternion.Euler(0, rot.y, 0)).eulerAngles;
+        target = (Quaternion.Euler(target.x, 0, target.z)* Quaternion.Euler(0, rot.y, 0)).eulerAngles;
         n_target.x = (float)A_net_x;
-        n_target.z = (float)A_net_z;
-        n_target = (Quaternion.Euler(n_target.x, 0, -n_target.z) * Quaternion.Euler(0, rot.y, 0)).eulerAngles;
+        A_net_z = n_target.z = target.z; // (float)A_net_z;
+        n_target = (Quaternion.Euler(n_target.x, 0, n_target.z) * Quaternion.Euler(0, rot.y, 0)).eulerAngles;
+        n_target = Quaternion.FromToRotation(Vector3.down, n_target).eulerAngles;
         GameObject.Find("Acube").GetComponent<Transform>().Rotate(n_target);
 
         // targetYaw = (float)(360.0f / 2 * Math.PI) * (float)Math.Asin((targetX - geo_X) / Math.Sqrt(Math.Pow((targetX - geo_X), 2) + Math.Pow((targetZ - geo_Z), 2))); 
         //применяем расчитанные допустимые целевые значения крена и тангажа
 
-        targetPitch = target.x;
-        targetRoll = target.z;
+        targetPitch = target.z;
+        targetRoll = -target.x;
 
         //углы расчитанные из акселерометров
 
