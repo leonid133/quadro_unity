@@ -83,10 +83,10 @@ public class quadrocopterScript : MonoBehaviour
 	public double targetYaw;
 
     //PID регуляторы, которые будут стабилизировать углы
-
+/*
     private PID pitchPID = new PID (100, 0, 20); //держится на ошибке 7 м/с2 но очень беспокойно себя ведет
     private PID rollPID = new PID (100, 0, 20);
-
+    */
     /*
     private PID pitchPID = new PID(20, 1, 15); //держится на ошибке 4 м/с2
     private PID rollPID = new PID(20, 1, 15);
@@ -95,8 +95,8 @@ public class quadrocopterScript : MonoBehaviour
        private PID pitchPID = new PID(10, 1, 1); //плавно держится на 7 но медленно реагирует на события, может перевернуться 
        private PID rollPID = new PID(10, 1, 1);
       */
-    //private PID pitchPID = new PID(10, 0, 2); // 5 м/с2 держится плавно реагирует на ошибки
-    //private PID rollPID = new PID(10, 0, 2);
+    private PID pitchPID = new PID(10, 0, 2); // 5 м/с2 держится плавно реагирует на ошибки
+    private PID rollPID = new PID(10, 0, 2);
 
     //private PID pitchPID = new PID(20, 0.001, 50); 
     //private PID rollPID = new PID(20, 0.001, 50);
@@ -106,12 +106,12 @@ public class quadrocopterScript : MonoBehaviour
 	//private Quaternion prevRotation = new Quaternion (0, 1, 0, 0);
 
     //mouse contol
-    float x = 0.0f;
-    float y = 0.0f;
-    float throttleSpeed = 0.01f;
-    float YawSpeed = 2.5f;
-    float RollSpeed = 2.5f;
-    float PitchSpeed = 2.5f;
+   // float x = 0.0f;
+   // float y = 0.0f;
+   // float throttleSpeed = 0.01f;
+   // float YawSpeed = 2.5f;
+  //  float RollSpeed = 2.5f;
+  //  float PitchSpeed = 2.5f;
 
 
     //автотест
@@ -684,7 +684,7 @@ public class quadrocopterScript : MonoBehaviour
         roll = rot.z;
         */
 
-        String pitch_str = "pitch: " + pitch.ToString();
+        //String pitch_str = "pitch: " + pitch.ToString();
 
     }
 
@@ -748,20 +748,26 @@ public class quadrocopterScript : MonoBehaviour
 		motor3power +=   yawForce;
 		motor4power += - yawForce;
 
+        double power_K = 0.3;
+        
         kalman_t1.Correct(motor1power);
         motor1power = kalman_t1.State;
+        motor1power = GameObject.Find("Motor1").GetComponent<motorScript>().power + ( motor1power - GameObject.Find("Motor1").GetComponent<motorScript>().power ) * power_K;
         GameObject.Find ("Motor1").GetComponent<motorScript>().power = motor1power;
 
         kalman_t2.Correct(motor2power);
         motor2power = kalman_t2.State;
+        motor2power = GameObject.Find("Motor2").GetComponent<motorScript>().power + (motor2power - GameObject.Find("Motor2").GetComponent<motorScript>().power) * power_K;
         GameObject.Find ("Motor2").GetComponent<motorScript>().power = motor2power;
 
         kalman_t3.Correct(motor3power);
         motor3power = kalman_t3.State;
+        motor3power = GameObject.Find("Motor3").GetComponent<motorScript>().power + (motor3power - GameObject.Find("Motor3").GetComponent<motorScript>().power) * power_K;
         GameObject.Find ("Motor3").GetComponent<motorScript>().power = motor3power;
 
         kalman_t4.Correct(motor4power);
         motor4power = kalman_t4.State;
+        motor4power = GameObject.Find("Motor4").GetComponent<motorScript>().power + (motor4power - GameObject.Find("Motor4").GetComponent<motorScript>().power) * power_K;
         GameObject.Find ("Motor4").GetComponent<motorScript>().power = motor4power;
 	}
     void OnGUI()
