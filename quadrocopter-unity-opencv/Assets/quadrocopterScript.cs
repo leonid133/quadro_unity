@@ -14,21 +14,26 @@ public class quadrocopterScript : MonoBehaviour
     public double Kerr;
     public double Klern = 0.05;
 
+    public double net_roll;
+    public double net_yaw;
+    public double net_pich;
+
     // регулировки высоты
     private static int[] Layers = { 100, 1 };
-    private static NeuralNW Net_H = new NeuralNW(4, Layers);
+    private static NeuralNW m_Net_H = new NeuralNW(4, Layers);
     
     public bool H_neyro_on = false;
     public double thrLimit;
-    
-    // регулировка тангажа
-    private static int[] LayersA = { 200, 1 };
-    private static NeuralNW Net_axelconv = new NeuralNW(4, LayersA);
-    public bool axel_neyro_on = false;
 
-    public double A_net_x;
-    public double A_net_y;
-    public double A_net_z;
+    // регулировка roll pich
+    public bool neyro_gps_on = false;
+
+    private static int[] Layers_Net_Roll = { 200, 1 };
+    private static NeuralNW m_Net_roll = new NeuralNW(4, Layers_Net_Roll);
+
+    private static int[] Layers_Net_Pich = { 200, 1 };
+    private static NeuralNW m_Net_pich = new NeuralNW(4, Layers_Net_Pich);
+
 
     //axel autopulot
 
@@ -120,7 +125,7 @@ public class quadrocopterScript : MonoBehaviour
         {
             d_time +=  Convert.ToDouble(Time.time) - lasttime;
             lasttime = Convert.ToDouble(Time.time);
-            if(d_time > 20)
+            if(d_time > 60)
             {
                 d_time = 0.0f;
 
@@ -344,7 +349,7 @@ public class quadrocopterScript : MonoBehaviour
 
     private Vector3 gps_save;
     private float gps_timer;
-    private void GetGPS(out Vector3 gps_XHZ)
+    private bool GetGPS(out Vector3 gps_XHZ)
     {
         gps_timer += Time.deltaTime;
         Vector3 pos = GameObject.Find("Sensors").GetComponent<Transform>().position;
@@ -363,13 +368,29 @@ public class quadrocopterScript : MonoBehaviour
             gps_timer = 0.0f;
 
             //Neyron
-            A_[0] = A_[1];
-            A_[1] = A_[2];
+            double dgeoX = targetX - gps_XHZ.x;
+            dgeoX = dgeoX < -50.0 ? -50.0 : dgeoX;
+            dgeoX = dgeoX > 50.0 ? 50.0 : dgeoX;
+            dgeoX /= 100.0;
+            m_X_roll[0] = m_X_roll[1];
+            m_X_roll[1] = m_X_roll[2];
+            m_X_roll[2] = dgeoX;
+
+            double dgeoZ = targetZ - gps_XHZ.z;
+            dgeoZ = dgeoZ < -50.0 ? -50.0 : dgeoZ;
+            dgeoZ = dgeoZ > 50.0 ? 50.0 : dgeoZ;
+            dgeoZ = dgeoZ / 100.0;
+            m_X_pich[0] = m_X_pich[1];
+            m_X_pich[1] = m_X_pich[2];
+            m_X_pich[2] = dgeoZ;
+
+            return true;
         }
         else
         {
             gps_XHZ = gps_save;
             gps_XHZ.y = pos.y; // Высота у нас с барометра берется, и не ограничена одной посылкой в секунду
+            return false;
         }
     }
     double[] deltaH = new double[4];
@@ -404,7 +425,9 @@ public class quadrocopterScript : MonoBehaviour
         netsave_timer += Time.deltaTime;
         if(netsave_timer > 60)
         {
-            Net_axelconv.SaveNW("net_axelconv.txt");
+            m_Net_H.SaveNW("net_h.txt");
+            m_Net_pich.SaveNW("net_pich.txt");
+            m_Net_roll.SaveNW("net_roll.txt");
             netsave_timer = 0.0f;
         }
     }
@@ -452,9 +475,17 @@ public class quadrocopterScript : MonoBehaviour
     private static KalmanFilterSimple1D kalman_y = new KalmanFilterSimple1D(f: 1, h: 1, q: 500.8, r: 1050.85);
     private static KalmanFilterSimple1D kalman_z = new KalmanFilterSimple1D(f: 1, h: 1, q: 500.8, r: 1050.85);
 
-    private static KalmanFilterSimple1D kalman_gps_x = new KalmanFilterSimple1D(f: 1, h: 1, q: 5.0, r: 15.0); 
-    private static KalmanFilterSimple1D kalman_gps_z = new KalmanFilterSimple1D(f: 1, h: 1, q: 5.0, r: 15.0); 
-    private  double[] A_ = new double[4];
+    private static KalmanFilterSimple1D kalman_gps_x = new KalmanFilterSimple1D(f: 1.0, h: 1.0, q: 5.0, r: 10.0); 
+    private static KalmanFilterSimple1D kalman_gps_z = new KalmanFilterSimple1D(f: 1.0, h: 1.0, q: 5.0, r: 10.0);
+
+    private static KalmanFilterSimple1D kalman_t1 = new KalmanFilterSimple1D(f: 1.1, h: 0.9, q: 15.0, r: 15.0);
+    private static KalmanFilterSimple1D kalman_t2 = new KalmanFilterSimple1D(f: 1.1, h: 0.9, q: 15.0, r: 15.0);
+    private static KalmanFilterSimple1D kalman_t3 = new KalmanFilterSimple1D(f: 1.1, h: 0.9, q: 15.0, r: 15.0);
+    private static KalmanFilterSimple1D kalman_t4 = new KalmanFilterSimple1D(f: 1.1, h: 0.9, q: 15.0, r: 15.0);
+
+    private  double[] m_X_roll = new double[4];
+    private double[] m_X_pich = new double[4];
+
     void readRotation () {
 
         //фактическая ориентация квадрокоптера,
@@ -507,15 +538,16 @@ public class quadrocopterScript : MonoBehaviour
         Vector3 gps_XHZ;
         GetGPS(out gps_XHZ);
         /*
-        double geo_K = 0.01;
-
-        geo_X = geo_X + (gps_XHZ.x - geo_X) * geo_K;
-        geo_Z = geo_Z + (gps_XHZ.z - geo_Z) * geo_K;
-        */
         kalman_gps_x.Correct(gps_XHZ.x);
         geo_X = kalman_gps_x.State;
         kalman_gps_z.Correct(gps_XHZ.z);
         geo_Z = kalman_gps_z.State;
+        */
+        double geo_K = 0.01;
+        geo_X = geo_X + (gps_XHZ.x - geo_X) * geo_K;
+        geo_Z = geo_Z + (gps_XHZ.z - geo_Z) * geo_K;
+        
+
 
         GetH(out H_);
         //H_ = gps_XHZ.y;
@@ -545,10 +577,10 @@ public class quadrocopterScript : MonoBehaviour
         stream_writer.Close();
       */
         
-        /*
+        
          if (H_neyro_on)
          {
-             Net_H.NetOUT(deltaH, out dthr);
+             m_Net_H.NetOUT(deltaH, out dthr);
              dthr[0] *= 100.0;
              dthr[0] = dthr[0] < 0 ? 0 : dthr[0];
              thrLimit = dthr[0] > 100 ? 100 : dthr[0];
@@ -557,16 +589,17 @@ public class quadrocopterScript : MonoBehaviour
          else
          {
              dthr[0] /= 100.0;
-             do {
-                 Kerr = Net_H.LernNW(deltaH, dthr, Klern);
-             } while (Kerr > 1E-4);
+            // do {
+                 Kerr = m_Net_H.LernNW(deltaH, dthr, Klern);
+            // } while (Kerr > 1E-4);
 
-             Net_H.NetOUT(deltaH, out dthr);
+             m_Net_H.NetOUT(deltaH, out dthr);
              dthr[0] *= 100.0;
              dthr[0] = dthr[0] < 0 ? 0 : dthr[0];
              thrLimit = dthr[0] > 100 ? 100 : dthr[0];
-         }
-         */
+            throttle = thrLimit;
+        }
+         
         target.y = 0;
         double LimitAngle = 40;
 
@@ -580,58 +613,56 @@ public class quadrocopterScript : MonoBehaviour
         dRoll = dRoll > LimitAngle ? LimitAngle : dRoll;
         target.x = (float)dRoll;
 
-//neyro
-        double dgeoX = targetX - geo_X;
-        dgeoX = dgeoX < -10.0 ? -10.0 : dgeoX;
-        dgeoX = dgeoX > 10.0 ? 10.0 : dgeoX;
-        dgeoX /= 10.0;
-
-        double dgeoZ = targetZ - geo_Z;
-        dgeoZ = dgeoZ < -10.0 ? -10.0 : dgeoZ;
-        dgeoZ = dgeoZ > 10.0 ? 10.0 : dgeoZ;
-        dgeoZ = dgeoZ / 10.0;
+//neyro gps
+        
          
         GameObject.Find("Acube").GetComponent<Transform>().position = girotest_pos;
         GameObject.Find("Acube").GetComponent<Transform>().rotation = Quaternion.FromToRotation(GameObject.Find("Acube").GetComponent<Transform>().rotation.eulerAngles, Vector3.zero);
         //GameObject.Find("Acube").GetComponent<Transform>().Rotate(accel_rot);
 
-        // A_[0] = accel_rot.x / 80.0;
-        // A_[1] = accel_rot.z / 80.0;
+       
 
-        A_[2] = dgeoX;
-        //A_[3] = Ax / 20.0;
+        double[] m_Y_roll = new double[1];
+        m_Y_roll[0] = (target.x + 40.0) / 80.0;
 
-        double[] A_rot = new double[1];
-        A_rot[0] = (target.x + 40.0) / 80.0;
-       // A_rot[1] = (target.z + 40.0) / 80.0;
+        double[] m_Y_pich = new double[1];
+        m_Y_pich[0] = (target.z + 40.0) / 80.0;
+
         Vector3 n_target;
-        if (axel_neyro_on)
+        if (neyro_gps_on)
         {
-            Net_axelconv.NetOUT(A_, out A_rot);
-            A_net_x = (A_rot[0]*80.0) -40.0f;
-            //target.z = (float)(A_rot[1]*80.0) -40.0f;
-            target.x = (float)A_net_x;
-           // A_net_z = target.z;
+            m_Net_roll.NetOUT(m_X_roll, out m_Y_roll);
+            net_roll = (m_Y_roll[0]*80.0) -40.0f;
+            target.x = (float)net_roll;
+
+            m_Net_pich.NetOUT(m_X_pich, out m_Y_pich);
+            net_pich = (m_Y_pich[0] * 80.0) - 40.0f;
+            target.z = (float)net_pich;
         }
         else
         {
            // do {
-                Kerr = Net_axelconv.LernNW(A_, A_rot, Klern);
+                Kerr = m_Net_roll.LernNW(m_X_roll, m_Y_roll, Klern);
           //  } while (Kerr > 1E-2);
-            Net_axelconv.NetOUT(A_, out A_rot);
-            A_net_x = A_rot[0]*80.0 - 40.0f;
-            target.x = (float)A_net_x;
-            // A_net_z = A_rot[1]*80.0 - 40.0f;
+            m_Net_roll.NetOUT(m_X_roll, out m_Y_roll);
+            net_roll = m_Y_roll[0]*80.0 - 40.0f;
+            target.x = (float)net_roll;
+
+            // do {
+            Kerr = m_Net_pich.LernNW(m_X_pich, m_Y_pich, Klern);
+            //  } while (Kerr > 1E-2);
+            m_Net_pich.NetOUT(m_X_pich, out m_Y_pich);
+            net_pich = m_Y_pich[0] * 80.0 - 40.0f;
+            target.z = (float)net_pich;
 
             NetSave();
         }
   //neyroend
         //поворачиваем расчетные значения на отклонение от севера
         target = (Quaternion.Euler(target.x, 0, target.z)* Quaternion.Euler(0, rot.y, 0)).eulerAngles;
-        n_target.x = (float)A_net_x;
-        A_net_z = n_target.z = target.z; // (float)A_net_z;
+        n_target.x = (float)net_roll;
+        n_target.z = (float)net_pich;
         n_target = (Quaternion.Euler(n_target.x, 0, n_target.z) * Quaternion.Euler(0, rot.y, 0)).eulerAngles;
-        n_target = Quaternion.FromToRotation(Vector3.down, n_target).eulerAngles;
         GameObject.Find("Acube").GetComponent<Transform>().Rotate(n_target);
 
         // targetYaw = (float)(360.0f / 2 * Math.PI) * (float)Math.Asin((targetX - geo_X) / Math.Sqrt(Math.Pow((targetX - geo_X), 2) + Math.Pow((targetZ - geo_Z), 2))); 
@@ -717,10 +748,21 @@ public class quadrocopterScript : MonoBehaviour
 		motor3power +=   yawForce;
 		motor4power += - yawForce;
 
-		GameObject.Find ("Motor1").GetComponent<motorScript>().power = motor1power;
-		GameObject.Find ("Motor2").GetComponent<motorScript>().power = motor2power;
-		GameObject.Find ("Motor3").GetComponent<motorScript>().power = motor3power;
-		GameObject.Find ("Motor4").GetComponent<motorScript>().power = motor4power;
+        kalman_t1.Correct(motor1power);
+        motor1power = kalman_t1.State;
+        GameObject.Find ("Motor1").GetComponent<motorScript>().power = motor1power;
+
+        kalman_t2.Correct(motor2power);
+        motor2power = kalman_t2.State;
+        GameObject.Find ("Motor2").GetComponent<motorScript>().power = motor2power;
+
+        kalman_t3.Correct(motor3power);
+        motor3power = kalman_t3.State;
+        GameObject.Find ("Motor3").GetComponent<motorScript>().power = motor3power;
+
+        kalman_t4.Correct(motor4power);
+        motor4power = kalman_t4.State;
+        GameObject.Find ("Motor4").GetComponent<motorScript>().power = motor4power;
 	}
     void OnGUI()
     {
