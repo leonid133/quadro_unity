@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-using UnityStandardAssets.CrossPlatformInput;
+//using UnityStandardAssets.CrossPlatformInput;
 
 	public class ThrottleJoystick : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler
 	{
@@ -22,8 +22,8 @@ using UnityStandardAssets.CrossPlatformInput;
 		Vector3 m_StartPos;
 		bool m_UseX; // Toggle for using the x axis
 		bool m_UseY; // Toggle for using the Y axis
-		CrossPlatformInputManager.VirtualAxis m_HorizontalVirtualAxis; // Reference to the joystick in the cross platform input
-		CrossPlatformInputManager.VirtualAxis m_VerticalVirtualAxis; // Reference to the joystick in the cross platform input
+		//CrossPlatformInputManager.VirtualAxis m_HorizontalVirtualAxis; // Reference to the joystick in the cross platform input
+		//CrossPlatformInputManager.VirtualAxis m_VerticalVirtualAxis; // Reference to the joystick in the cross platform input
 		
 		void OnEnable()
 		{
@@ -43,12 +43,12 @@ using UnityStandardAssets.CrossPlatformInput;
 			delta /= MovementRange;
 			if (m_UseX)
 			{
-				m_HorizontalVirtualAxis.Update(-delta.x);
+				//m_HorizontalVirtualAxis.Update(-delta.x);
 			}
 			
 			if (m_UseY)
 			{
-				m_VerticalVirtualAxis.Update(delta.y);
+			//	m_VerticalVirtualAxis.Update(delta.y);
 			}
 		}
 		
@@ -61,13 +61,16 @@ using UnityStandardAssets.CrossPlatformInput;
 			// create new axes based on axes to use
 			if (m_UseX)
 			{
-				m_HorizontalVirtualAxis = new CrossPlatformInputManager.VirtualAxis(horizontalAxisName);
+				/*m_HorizontalVirtualAxis = new CrossPlatformInputManager.VirtualAxis(horizontalAxisName);
 				CrossPlatformInputManager.RegisterVirtualAxis(m_HorizontalVirtualAxis);
+                */
 			}
 			if (m_UseY)
 			{
+            /*
 				m_VerticalVirtualAxis = new CrossPlatformInputManager.VirtualAxis(verticalAxisName);
 				CrossPlatformInputManager.RegisterVirtualAxis(m_VerticalVirtualAxis);
+                */
 			}
 		}
 		
@@ -111,11 +114,11 @@ using UnityStandardAssets.CrossPlatformInput;
 			// remove the joysticks from the cross platform input
 			if (m_UseX)
 			{
-				m_HorizontalVirtualAxis.Remove();
+				//m_HorizontalVirtualAxis.Remove();
 			}
 			if (m_UseY)
 			{
-				m_VerticalVirtualAxis.Remove();
+				//m_VerticalVirtualAxis.Remove();
 			}
 		}
 	}

@@ -75,6 +75,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\GameController.cs" />
+    <Compile Include="Assets\NewBehaviourScript.cs" />
     <Compile Include="Assets\ThrottleJoystick.cs" />
     <Compile Include="Assets\_Camera\CameraFollow.cs" />
     <Compile Include="Assets\motorScript.cs" />
